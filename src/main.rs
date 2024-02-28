@@ -80,11 +80,17 @@ diff:
         });
     }
 
-    //// Commit changes
-    let sig = repo.signature()?;
-    let tree_id = index.write_tree()?;
-    let tree = repo.find_tree(tree_id)?;
-    let head = repo.head()?.peel_to_commit()?;
-    repo.commit(Some("HEAD"), &sig, &sig, &commit_message, &tree, &[&head])?;
+    let ans = inquire::Confirm::new("commit with this message?")
+        .with_default(true)
+        .prompt();
+
+    if ans.expect("Failed to get user input") {
+        //// Commit changes
+        let sig = repo.signature()?;
+        let tree_id = index.write_tree()?;
+        let tree = repo.find_tree(tree_id)?;
+        let head = repo.head()?.peel_to_commit()?;
+        repo.commit(Some("HEAD"), &sig, &sig, &commit_message, &tree, &[&head])?;
+    }
     Ok(())
 }

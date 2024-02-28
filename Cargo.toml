@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 clap = "4.5.1"
 git2 = "0.18.2"
+inquire = "0.7.0"
 openai = "1.0.0-alpha.14"
 serde = "1.0.197"
 serde_json = "1.0.114"
