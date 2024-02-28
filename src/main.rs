@@ -69,30 +69,22 @@ diff:
     .create_stream()
     .await?;
 
+    let mut commit_message = String::new();
     while let Some(response) = response_rx.recv().await {
         response.choices.iter().for_each(|choice| {
-            print!(
-                "{}",
-                choice.delta.content.as_ref().unwrap_or(&"".to_string())
-            );
-            std::io::Write::flush(&mut std::io::stdout()).unwrap();
+            if let Some(content) = &choice.delta.content {
+                commit_message.push_str(content);
+                print!("{}", content);
+                std::io::Write::flush(&mut std::io::stdout()).unwrap();
+            }
         });
     }
 
-    //let commit_message = response
-    //    .choices
-    //    .iter()
-    //    .map(|choice| choice.message.content.as_ref().expect("No content"))
-    //    .cloned()
-    //    .collect::<String>();
-
-    ////// Commit changes
-    //let sig = repo.signature()?;
-    //let tree_id = index.write_tree()?;
-    //let tree = repo.find_tree(tree_id)?;
-    //let head = repo.head()?.peel_to_commit()?;
-    //repo.commit(Some("HEAD"), &sig, &sig, &commit_message, &tree, &[&head])?;
-
-    //println!("Committed with message: {}", commit_message);
+    //// Commit changes
+    let sig = repo.signature()?;
+    let tree_id = index.write_tree()?;
+    let tree = repo.find_tree(tree_id)?;
+    let head = repo.head()?.peel_to_commit()?;
+    repo.commit(Some("HEAD"), &sig, &sig, &commit_message, &tree, &[&head])?;
     Ok(())
 }
