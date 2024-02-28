@@ -1,40 +1,34 @@
 use git2::{DiffFormat, Repository};
-use openai::chat::{
-    ChatCompletion, ChatCompletionBuilder, ChatCompletionDelta, ChatCompletionMessage,
-};
+use openai::chat::{ChatCompletionDelta, ChatCompletionMessage};
+use std::env;
 use std::error::Error;
 use std::fmt::Write;
 use std::io::Read;
-use std::{default::Default, env};
 use tokio;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     let repo_path = ".";
     let repo = Repository::open(repo_path)?;
-
-    let head_commit = repo.head()?.peel_to_commit()?;
-    let head_tree = head_commit.tree()?;
     let mut index = repo.index()?;
-    let diff = repo.diff_tree_to_index(Some(&head_tree), Some(&index), None)?;
 
-    let mut diff_buf = String::new();
+    let diff_buf = get_diff(&repo)?;
+    if diff_buf.is_empty() {
+        let stage = inquire::Confirm::new("No changes to commit. stage all changes?")
+            .with_default(true)
+            .prompt()
+            .expect("Failed to get user input");
 
-    let _ = &diff
-        .print(DiffFormat::Patch, |_delta, _hunk, line| {
-            let mut buf = String::new();
-
-            line.content()
-                .read_to_string(&mut buf)
-                .expect("Failed to read line");
-
-            diff_buf
-                .write_fmt(format_args!("{} {}", line.origin(), buf))
-                .expect("Failed to write diff");
-
-            true
-        })
-        .expect("Failed to print diff");
+        if stage {
+            index
+                .add_all(["*"].iter(), git2::IndexAddOption::DEFAULT, None)
+                .expect("Failed to stage changes");
+            index.write().expect("Failed to write index");
+        } else {
+            return Ok(());
+        }
+    }
+    let diff_buf = get_diff(&repo)?;
 
     // Authenticate with OpenAI and generate commit message
     let api_key = env::var("OPENAI_API_KEY")?;
@@ -81,11 +75,12 @@ diff:
     }
     println!();
 
-    let ans = inquire::Confirm::new("commit with this message?")
+    let commit = inquire::Confirm::new("commit with this message?")
         .with_default(true)
-        .prompt();
+        .prompt()
+        .expect("Failed to get user input");
 
-    if ans.expect("Failed to get user input") {
+    if commit {
         //// Commit changes
         let sig = repo.signature()?;
         let tree_id = index.write_tree()?;
@@ -94,4 +89,31 @@ diff:
         repo.commit(Some("HEAD"), &sig, &sig, &commit_message, &tree, &[&head])?;
     }
     Ok(())
+}
+
+fn get_diff(repo: &git2::Repository) -> anyhow::Result<String> {
+    let index = repo.index()?;
+    let head_commit = repo.head()?.peel_to_commit()?;
+    let head_tree = head_commit.tree()?;
+    let diff = repo.diff_tree_to_index(Some(&head_tree), Some(&index), None)?;
+
+    let mut diff_buf = String::new();
+
+    let _ = &diff
+        .print(DiffFormat::Patch, |_delta, _hunk, line| {
+            let mut buf = String::new();
+
+            line.content()
+                .read_to_string(&mut buf)
+                .expect("Failed to read line");
+
+            diff_buf
+                .write_fmt(format_args!("{} {}", line.origin(), buf))
+                .expect("Failed to write diff");
+
+            true
+        })
+        .expect("Failed to print diff");
+
+    Ok(diff_buf)
 }
