@@ -6,6 +6,9 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-env = "0.0.0"
+clap = "4.5.1"
 git2 = "0.18.2"
 openai = "1.0.0-alpha.14"
+serde = "1.0.197"
+serde_json = "1.0.114"
+tokio = "1.36.0"
