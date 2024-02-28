@@ -2,6 +2,7 @@ use git2::{DiffFormat, IndexAddOption, Repository};
 use openai::chat::{ChatCompletion, ChatCompletionBuilder, ChatCompletionMessage};
 use serde::{Deserialize, Serialize};
 use std::error::Error;
+use std::fmt::Write;
 use std::{default::Default, env};
 use tokio;
 
@@ -9,14 +10,19 @@ use tokio;
 async fn main() -> Result<(), Box<dyn Error>> {
     let repo_path = ".";
     let repo = Repository::open(repo_path)?;
-    let mut index = repo.index()?;
 
     // Stage changes
-    index.add_all(["*"].iter(), IndexAddOption::DEFAULT, None)?;
-    index.write()?;
+    //index.add_all(["*"].iter(), IndexAddOption::DEFAULT, None)?;
+    //index.write()?;
 
+    let head_commit = repo.head()?.peel_to_commit()?;
+    let head_tree = head_commit.tree()?;
+
+    let mut index = repo.index()?;
+    let index_tree = index.write_tree_to(&repo)?;
     // Diff to summarize changes
-    let diff = repo.diff_index_to_workdir(Some(&index), None)?;
+    let diff =
+        repo.diff_tree_to_tree(Some(&head_tree), Some(&repo.find_tree(index_tree)?), None)?;
     let stats = diff.stats()?;
     let summary = format!(
         "Changes: {} files, {} insertions(+), {} deletions(-)",
@@ -25,29 +31,50 @@ async fn main() -> Result<(), Box<dyn Error>> {
         stats.deletions()
     );
 
+    let mut diff_buf = String::new();
+
     let _ = &diff
         .print(DiffFormat::Patch, |delta, hunk, line| {
-            println!("delta: {:?}", delta);
-            println!("hunk: {:?}", hunk);
-            println!("line: {:?}", line);
+            diff_buf
+                .write_str("--------------------------\n")
+                .expect("Failed to write diff");
+            diff_buf
+                .write_fmt(format_args!("{:?}\n", delta))
+                .expect("Failed to write diff");
+            diff_buf
+                .write_fmt(format_args!("{:?}\n", hunk))
+                .expect("Failed to write diff");
+            diff_buf
+                .write_fmt(format_args!("{:?}\n", line))
+                .expect("Failed to write diff");
             true
         })
         .expect("Failed to print diff");
-    dbg!(&stats);
-    dbg!(&summary);
-    panic!();
+    println!("{}", diff_buf);
 
     // Authenticate with OpenAI and generate commit message
     let api_key = env::var("OPENAI_API_KEY")?;
     openai::set_key(api_key);
 
     let prompt = format!(
-        "Summarize these changes for a git commit message: {}",
-        summary
+        r#"
+write a commit message for the changes I will write at the end of this message.
+- NEVER WRITE MORE THAN 10 WORDS AT THE FIRST LINE.
+- you must write WHY you made the changes, not WHAT you changed.
+- YOU MUST NOT POINT TO SMALL DETAILS, BUT TO THE BIG PICTURE.
+- ONLY RETURN COMMIT MESSAGE. DO NOT STATE WITH `Commit message:`
+- priority is feature, then fix, then refactor, then style. if you feel you can not fit everything in 10 words, then you can skip where priority is low.
+
+I will pass the diff below
+```
+{}
+```
+"#,
+        diff_buf
     );
 
     let request = ChatCompletionBuilder::default()
-        .model("gpt-4")
+        .model("gpt-4-turbo-preview")
         .messages([ChatCompletionMessage {
             role: openai::chat::ChatCompletionMessageRole::Assistant,
             content: Some(prompt),
@@ -58,7 +85,15 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .expect("Failed to build chat completion");
 
     let response = ChatCompletion::create(&request).await?;
-    dbg!(response);
+
+    let message = response
+        .choices
+        .iter()
+        .map(|choice| choice.message.content.as_ref().expect("No content"))
+        .cloned()
+        .collect::<String>();
+
+    dbg!("{}", message);
 
     //let commit_message = response.choices.get(0).map_or_else(
     //    || Err("No completion found".into()),
