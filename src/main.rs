@@ -1,5 +1,7 @@
 use git2::{DiffFormat, Repository};
-use openai::chat::{ChatCompletion, ChatCompletionBuilder, ChatCompletionMessage};
+use openai::chat::{
+    ChatCompletion, ChatCompletionBuilder, ChatCompletionDelta, ChatCompletionMessage,
+};
 use std::error::Error;
 use std::fmt::Write;
 use std::io::Read;
@@ -55,33 +57,42 @@ diff:
         diff_buf
     );
 
-    let request = ChatCompletionBuilder::default()
-        .model("gpt-4-turbo-preview")
-        .messages([ChatCompletionMessage {
+    let mut response_rx = ChatCompletionDelta::builder(
+        "gpt-4-turbo-preview",
+        [ChatCompletionMessage {
             role: openai::chat::ChatCompletionMessageRole::Assistant,
             content: Some(prompt),
             name: None,
             function_call: None,
-        }])
-        .build()
-        .expect("Failed to build chat completion");
+        }],
+    )
+    .create_stream()
+    .await?;
 
-    let response = ChatCompletion::create(&request).await?;
+    while let Some(response) = response_rx.recv().await {
+        response.choices.iter().for_each(|choice| {
+            print!(
+                "{}",
+                choice.delta.content.as_ref().unwrap_or(&"".to_string())
+            );
+            std::io::Write::flush(&mut std::io::stdout()).unwrap();
+        });
+    }
 
-    let commit_message = response
-        .choices
-        .iter()
-        .map(|choice| choice.message.content.as_ref().expect("No content"))
-        .cloned()
-        .collect::<String>();
+    //let commit_message = response
+    //    .choices
+    //    .iter()
+    //    .map(|choice| choice.message.content.as_ref().expect("No content"))
+    //    .cloned()
+    //    .collect::<String>();
 
-    //// Commit changes
-    let sig = repo.signature()?;
-    let tree_id = index.write_tree()?;
-    let tree = repo.find_tree(tree_id)?;
-    let head = repo.head()?.peel_to_commit()?;
-    repo.commit(Some("HEAD"), &sig, &sig, &commit_message, &tree, &[&head])?;
+    ////// Commit changes
+    //let sig = repo.signature()?;
+    //let tree_id = index.write_tree()?;
+    //let tree = repo.find_tree(tree_id)?;
+    //let head = repo.head()?.peel_to_commit()?;
+    //repo.commit(Some("HEAD"), &sig, &sig, &commit_message, &tree, &[&head])?;
 
-    println!("Committed with message: {}", commit_message);
+    //println!("Committed with message: {}", commit_message);
     Ok(())
 }
