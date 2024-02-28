@@ -7,4 +7,5 @@ edition = "2021"
 
 [dependencies]
 env = "0.0.0"
+git2 = "0.18.2"
 openai = "1.0.0-alpha.14"
