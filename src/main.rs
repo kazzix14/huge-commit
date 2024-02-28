@@ -33,7 +33,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
             true
         })
         .expect("Failed to print diff");
-    //println!("{}", diff_buf);
 
     // Authenticate with OpenAI and generate commit message
     let api_key = env::var("OPENAI_API_KEY")?;
