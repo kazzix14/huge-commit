@@ -79,6 +79,7 @@ diff:
             }
         });
     }
+    println!();
 
     let ans = inquire::Confirm::new("commit with this message?")
         .with_default(true)
