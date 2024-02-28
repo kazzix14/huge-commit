@@ -1,6 +1,5 @@
 use git2::{DiffFormat, Repository};
 use openai::chat::{ChatCompletion, ChatCompletionBuilder, ChatCompletionMessage};
-use serde::{Deserialize, Serialize};
 use std::error::Error;
 use std::fmt::Write;
 use std::io::Read;
@@ -20,7 +19,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let mut diff_buf = String::new();
 
     let _ = &diff
-        .print(DiffFormat::Patch, |delta, hunk, line| {
+        .print(DiffFormat::Patch, |_delta, _hunk, line| {
             let mut buf = String::new();
 
             line.content()
@@ -87,39 +86,3 @@ diff:
     println!("Committed with message: {}", commit_message);
     Ok(())
 }
-
-#[derive(Serialize, Deserialize)]
-struct OpenAiPrompt {
-    prompt: String,
-    max_tokens: u32,
-}
-
-#[derive(Serialize, Deserialize)]
-struct OpenAiResponse {
-    choices: Vec<Choice>,
-}
-
-#[derive(Serialize, Deserialize)]
-struct Choice {
-    text: String,
-}
-
-//async fn generate_commit_message(
-//    client: &OpenAiClient,
-//    summary: &str,
-//) -> Result<String, Box<dyn Error>> {
-//    let prompt = OpenAiPrompt {
-//        prompt: format!(
-//            "Summarize these changes for a git commit message: {}",
-//            summary
-//        ),
-//        max_tokens: 60, // Adjust based on desired length
-//    };
-//
-//    let response: OpenAiResponse = client.completions("text-davinci-003", &prompt).await?;
-//    if let Some(choice) = response.choices.get(0) {
-//        Ok(choice.text.trim().to_string())
-//    } else {
-//        Err("Failed to generate commit message".into())
-//    }
-//}
