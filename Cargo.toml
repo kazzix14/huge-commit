@@ -2,6 +2,11 @@
 name = "huge-commit"
 version = "0.1.0"
 edition = "2021"
+authors = ["Kazuma Murata <kazzix14@gmail.com>"]
+license = "MIT"
+description = "make commit message with openai"
+repository = "https://github.com/kazzix14/fast-food"
+readme = "README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
