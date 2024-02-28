@@ -31,7 +31,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let diff_buf = get_diff(&repo)?;
 
     // Authenticate with OpenAI and generate commit message
-    let api_key = env::var("OPENAI_API_KEY")?;
+    let api_key = env::var("OPENAI_API_KEY").expect("OPENAI_API_KEY not set");
     openai::set_key(api_key);
 
     let prompt = format!(
