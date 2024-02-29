@@ -1,5 +1,5 @@
 use clap::Subcommand;
-use directories;
+
 use std::{
     fs::File,
     io::Write,
@@ -71,7 +71,7 @@ fn read_config() -> anyhow::Result<Config> {
 }
 
 fn write_config(config: &Config) -> anyhow::Result<()> {
-    let mut file = File::create(&config_path()?)?;
+    let mut file = File::create(config_path()?)?;
 
     file.write_all(toml::to_string(config)?.as_bytes())?;
 

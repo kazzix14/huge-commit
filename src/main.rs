@@ -7,8 +7,8 @@ use clap::Parser;
 
 use git2::{DiffFormat, Repository};
 use openai::chat::{ChatCompletionDelta, ChatCompletionMessage};
-use serde::Serialize;
-use std::env;
+
+
 use std::error::Error;
 use std::fmt::Write;
 use std::io::Read;
@@ -39,13 +39,12 @@ async fn main() -> Result<(), Box<dyn Error>> {
             models.iter().for_each(|model| {
                 let created_at = model
                     .created
-                    .map(|created_at| {
+                    .and_then(|created_at| {
                         chrono::Local
                             .timestamp_opt(created_at, 0)
                             .single()
                             .map(|datetime| datetime.to_rfc2822())
                     })
-                    .flatten()
                     .unwrap_or("n/a".to_string());
 
                 println!(
@@ -91,7 +90,7 @@ fn commit_changes(repo: &Repository, commit_message: &str) -> anyhow::Result<()>
         let tree_id = index.write_tree()?;
         let tree = repo.find_tree(tree_id)?;
         let head = repo.head()?.peel_to_commit()?;
-        repo.commit(Some("HEAD"), &sig, &sig, &commit_message, &tree, &[&head])?;
+        repo.commit(Some("HEAD"), &sig, &sig, commit_message, &tree, &[&head])?;
     };
 
     Ok(())
@@ -188,7 +187,7 @@ fn stage_all_files(repo: &Repository) -> anyhow::Result<()> {
     }
 }
 
-fn get_diff<'a>(repo: &'a git2::Repository) -> anyhow::Result<git2::Diff<'a>> {
+fn get_diff(repo: &git2::Repository) -> anyhow::Result<git2::Diff<'_>> {
     let index = repo.index()?;
     let head_commit = repo.head()?.peel_to_commit()?;
     let head_tree = head_commit.tree()?;
