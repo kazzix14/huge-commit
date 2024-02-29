@@ -1,4 +1,7 @@
-use clap::{Arg, Args, Parser, Subcommand, ValueEnum};
+mod cli;
+
+use clap::Parser;
+
 use git2::{DiffFormat, Repository};
 use openai::chat::{ChatCompletionDelta, ChatCompletionMessage};
 use std::env;
@@ -6,39 +9,6 @@ use std::error::Error;
 use std::fmt::Write;
 use std::io::Read;
 
-#[derive(Debug, Parser)]
-struct Cli {
-    #[clap(subcommand)]
-    command: Option<CliCommand>,
-}
-
-#[derive(Debug, Subcommand)]
-enum CliCommand {
-    Commit,
-    #[clap(subcommand)]
-    Config(ConfigCommand),
-}
-
-#[derive(Debug, Subcommand)]
-enum ConfigCommand {
-    List,
-    Get {
-        #[clap(index = 1)]
-        key: Configs,
-    },
-    Set {
-        #[clap(index = 1)]
-        key: Configs,
-
-        #[clap(index = 2)]
-        value: String,
-    },
-}
-
-#[derive(Debug, Clone, Copy, ValueEnum)]
-enum Configs {
-    OpenaiApiKey,
-}
 
 #[derive(Debug, thiserror::Error)]
 enum UserError {
@@ -48,24 +18,24 @@ enum UserError {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    let command = Cli::parse();
+    let args = cli::Args::parse();
 
-    match command.command {
-        None | Some(CliCommand::Commit) => commit().await?,
-        Some(CliCommand::Config(ConfigCommand::List)) => {
-            <Configs as clap::ValueEnum>::value_variants()
+    match args.command {
+        None | Some(cli::Command::Commit) => commit().await?,
+        Some(cli::Command::Config(cli::config::Command::List)) => {
+            <cli::config::Item as clap::ValueEnum>::value_variants()
                 .iter()
                 .for_each(|config| {
                     println!(
                         "{}",
-                        <Configs as clap::ValueEnum>::to_possible_value(&config)
+                        <cli::config::Item as clap::ValueEnum>::to_possible_value(&config)
                             .unwrap()
                             .get_name()
                     );
                 });
         }
-        Some(CliCommand::Config(ConfigCommand::Get { key })) => {}
-        Some(CliCommand::Config(ConfigCommand::Set { key, value })) => {}
+        Some(cli::Command::Config(cli::config::Command::Get { key })) => {}
+        Some(cli::Command::Config(cli::config::Command::Set { key, value })) => {}
     }
 
     Ok(())
