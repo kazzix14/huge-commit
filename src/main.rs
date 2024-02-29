@@ -1,4 +1,5 @@
 mod cli;
+mod config;
 
 use clap::Parser;
 
@@ -22,20 +23,20 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     match args.command {
         None | Some(cli::Command::Commit) => commit().await?,
-        Some(cli::Command::Config(cli::config::Command::List)) => {
-            <cli::config::Item as clap::ValueEnum>::value_variants()
+        Some(cli::Command::Config(config::Command::List)) => {
+            <config::Item as clap::ValueEnum>::value_variants()
                 .iter()
                 .for_each(|config| {
                     println!(
                         "{}",
-                        <cli::config::Item as clap::ValueEnum>::to_possible_value(&config)
+                        <config::Item as clap::ValueEnum>::to_possible_value(&config)
                             .unwrap()
                             .get_name()
                     );
                 });
         }
-        Some(cli::Command::Config(cli::config::Command::Get { key })) => {}
-        Some(cli::Command::Config(cli::config::Command::Set { key, value })) => {}
+        Some(cli::Command::Config(config::Command::Get { key })) => {}
+        Some(cli::Command::Config(config::Command::Set { key, value })) => {}
     }
 
     Ok(())

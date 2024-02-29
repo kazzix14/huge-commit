@@ -1,4 +1,4 @@
-use clap::{Parser, Subcommand, ValueEnum};
+use clap::{Parser, Subcommand};
 
 #[derive(Debug, Parser)]
 pub struct Args {
@@ -9,31 +9,7 @@ pub struct Args {
 #[derive(Debug, Subcommand)]
 pub enum Command {
     Commit,
+
     #[clap(subcommand)]
-    Config(config::Command),
-}
-
-pub mod config {
-    use clap::{Subcommand, ValueEnum};
-
-    #[derive(Debug, Subcommand)]
-    pub enum Command {
-        List,
-        Get {
-            #[clap(index = 1)]
-            key: Item,
-        },
-        Set {
-            #[clap(index = 1)]
-            key: Item,
-
-            #[clap(index = 2)]
-            value: String,
-        },
-    }
-
-    #[derive(Debug, Clone, Copy, ValueEnum)]
-    pub enum Item {
-        OpenaiApiKey,
-    }
+    Config(crate::config::Command),
 }
