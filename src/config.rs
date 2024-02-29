@@ -1,9 +1,8 @@
 use clap::Subcommand;
 use directories;
-use serde::Deserialize;
 use std::{
     fs::File,
-    io::{Read, Write},
+    io::Write,
 };
 
 #[derive(Debug, Subcommand)]
