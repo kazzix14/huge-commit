@@ -57,6 +57,8 @@ fn config_path() -> anyhow::Result<std::path::PathBuf> {
     let cache_dir = base_dir.cache_dir();
     let config_path = cache_dir.join("huge-commit/config.toml");
 
+    std::fs::create_dir_all(config_path.parent().expect("Failed to get parent"))?;
+
     Ok(config_path)
 }
 
