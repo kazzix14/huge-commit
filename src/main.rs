@@ -124,13 +124,13 @@ async fn gen_commit_message<'a>(diff: &git2::Diff<'a>) -> anyhow::Result<String>
 
     let prompt = format!(
         r#"
-write a commit message for the changes I will write at the end of this message.
-- NEVER WRITE MORE THAN 10 WORDS AT THE FIRST LINE.
-- you must write WHY you made the changes, not WHAT you changed.
-- YOU MUST NOT POINT TO SMALL DETAILS, BUT TO THE BIG PICTURE.
-- ONLY RETURN COMMIT MESSAGE. DO NOT STATE WITH `Commit message:`
-- priority is feature, then fix, then refactor, then style. if you feel you can not fit everything in 10 words, then you can skip where priority is low.
-- use present tense verbs. e.g. "add feature" instead of "added feature"
+Write a commit message for the changes I will write at the end of this message.
+- Limit the first line to a maximum of 10 words.
+- Explain the reason behind the changes, not the specific details of what was changed.
+- Focus on the big picture, rather than small details.
+- Only provide the commit message without starting with "Commit message:".
+- If you can't fit everything in 10 words, prioritize the most important information.
+- Use present tense verbs, e.g., "Add feature" instead of "Added feature".
 
 diff:
 ```
