@@ -23,7 +23,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let args = cli::Args::parse();
 
     match args.command {
-        None | Some(cli::Command::Commit) => commit(args.message).await?,
+        None | Some(cli::Command::Commit) => commit(args.message, args.assume_yes).await?,
         Some(cli::Command::Config(config::Command::Get { key })) => {
             if let Some(value) = config::get(key)? {
                 println!("{}", value);
@@ -60,12 +60,12 @@ async fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-async fn commit(base_message: Option<String>) -> anyhow::Result<()> {
+async fn commit(base_message: Option<String>, assume_yes: bool) -> anyhow::Result<()> {
     let repo = Repository::open(".")?;
     let diff = get_diff(&repo)?;
 
     if !diff_has_change(&diff)? {
-        stage_all_files(&repo)?;
+        stage_all_files(&repo, assume_yes)?;
     }
 
     let diff = get_diff(&repo)?;
@@ -74,7 +74,7 @@ async fn commit(base_message: Option<String>) -> anyhow::Result<()> {
     } else {
         let commit_message = gen_commit_message(base_message, &diff).await?;
 
-        commit_changes(&repo, &commit_message)?;
+        commit_changes(&repo, &commit_message, assume_yes)?;
         Ok(())
     }
 }
@@ -89,10 +89,14 @@ fn confirm(message: &'static str, default: bool) -> bool {
     confirm
 }
 
-fn commit_changes(repo: &Repository, commit_message: &str) -> anyhow::Result<()> {
+fn commit_changes(repo: &Repository, commit_message: &str, assume_yes: bool) -> anyhow::Result<()> {
     let mut index = repo.index()?;
 
-    let commit = confirm("commit with this message?", true);
+    let commit = if assume_yes {
+        true
+    } else {
+        confirm("commit with this message?", true)
+    };
 
     if commit {
         let sig = repo.signature()?;
@@ -105,7 +109,10 @@ fn commit_changes(repo: &Repository, commit_message: &str) -> anyhow::Result<()>
     Ok(())
 }
 
-async fn gen_commit_message<'a>(base_message: Option<String>, diff: &git2::Diff<'a>) -> anyhow::Result<String> {
+async fn gen_commit_message<'a>(
+    base_message: Option<String>,
+    diff: &git2::Diff<'a>,
+) -> anyhow::Result<String> {
     let mut diff_buf = String::new();
 
     let _ = &diff
@@ -128,13 +135,19 @@ async fn gen_commit_message<'a>(base_message: Option<String>, diff: &git2::Diff<
 
     openai::set_key(api_key);
 
-    let base_message_prompt = base_message.map(|message|
-format!(r#"
+    let base_message_prompt = base_message
+        .map(|message| {
+            format!(
+                r#"
 I'll put rough comment message, you should write commit message based on it.
 ```rough commit message
 {}
 ```
-"#, message)).unwrap_or("".to_string());
+"#,
+                message
+            )
+        })
+        .unwrap_or("".to_string());
 
     let prompt = format!(
         r#"
@@ -186,10 +199,14 @@ fn diff_has_change(diff: &git2::Diff) -> anyhow::Result<bool> {
     Ok(0 < diff.stats()?.files_changed())
 }
 
-fn stage_all_files(repo: &Repository) -> anyhow::Result<()> {
+fn stage_all_files(repo: &Repository, assume_yes: bool) -> anyhow::Result<()> {
     let mut index = repo.index()?;
 
-    let stage = confirm("commit with this message?", true);
+    let stage = if assume_yes {
+        true
+    } else {
+        confirm("stage all changes?", true)
+    };
 
     println!();
 
