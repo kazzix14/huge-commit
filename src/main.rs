@@ -130,6 +130,7 @@ write a commit message for the changes I will write at the end of this message.
 - YOU MUST NOT POINT TO SMALL DETAILS, BUT TO THE BIG PICTURE.
 - ONLY RETURN COMMIT MESSAGE. DO NOT STATE WITH `Commit message:`
 - priority is feature, then fix, then refactor, then style. if you feel you can not fit everything in 10 words, then you can skip where priority is low.
+- use present tense verbs. e.g. "add feature" instead of "added feature"
 
 diff:
 ```
