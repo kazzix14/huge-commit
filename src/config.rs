@@ -2,11 +2,12 @@ use clap::Subcommand;
 
 #[derive(Debug, Subcommand)]
 pub enum Command {
-    List,
+    #[clap(arg_required_else_help = true, flatten_help = true)]
     Get {
         #[clap(index = 1)]
         key: Item,
     },
+    #[clap(arg_required_else_help = true, flatten_help = true)]
     Set {
         #[clap(index = 1)]
         key: Item,
@@ -19,16 +20,13 @@ pub enum Command {
 #[derive(Debug, Clone, Copy, clap::ValueEnum)]
 pub enum Item {
     OpenaiApiKey,
+    OpenaiModel,
 }
 
-fn list() -> Vec<String> {
-    clap::ValueEnum::value_variants()
-        .iter()
-        .map(|config| {
-            <Item as clap::ValueEnum>::to_possible_value(&config)
-                .unwrap()
-                .get_name()
-                .to_string()
-        })
-        .collect()
+pub fn get(key: Item) -> () {
+    println!("get {:?}", key);
+}
+
+pub fn set(key: Item, value: String) -> () {
+    println!("set {:?} {:?}", key, value);
 }

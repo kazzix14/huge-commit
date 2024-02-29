@@ -10,7 +10,6 @@ use std::error::Error;
 use std::fmt::Write;
 use std::io::Read;
 
-
 #[derive(Debug, thiserror::Error)]
 enum UserError {
     #[error("No changes to commit.")]
@@ -23,20 +22,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     match args.command {
         None | Some(cli::Command::Commit) => commit().await?,
-        Some(cli::Command::Config(config::Command::List)) => {
-            <config::Item as clap::ValueEnum>::value_variants()
-                .iter()
-                .for_each(|config| {
-                    println!(
-                        "{}",
-                        <config::Item as clap::ValueEnum>::to_possible_value(&config)
-                            .unwrap()
-                            .get_name()
-                    );
-                });
-        }
-        Some(cli::Command::Config(config::Command::Get { key })) => {}
-        Some(cli::Command::Config(config::Command::Set { key, value })) => {}
+        Some(cli::Command::Config(config::Command::Get { key })) => config::get(key),
+        Some(cli::Command::Config(config::Command::Set { key, value })) => config::set(key, value),
     }
 
     Ok(())
