@@ -118,7 +118,7 @@ async fn gen_commit_message<'a>(diff: &git2::Diff<'a>) -> anyhow::Result<String>
         })
         .expect("Failed to print diff");
 
-    let api_key = config::get(config::Item::OpenaiApiKey)?.expect("open-api-key not set");
+    let api_key = config::get(config::Item::OpenaiApiKey)?.expect("openai-api-key not set");
 
     openai::set_key(api_key);
 
