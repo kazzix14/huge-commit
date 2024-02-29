@@ -2,7 +2,7 @@ use git2::{DiffFormat, Repository};
 use openai::chat::{ChatCompletionDelta, ChatCompletionMessage};
 use std::env;
 use std::error::Error;
-use std::fmt::{Display, Write};
+use std::fmt::Write;
 use std::io::Read;
 
 #[derive(Debug, thiserror::Error)]
@@ -22,14 +22,13 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let diff = get_diff(&repo)?;
     let commit_message = gen_commit_message(&diff).await?;
-    commit_changes(&commit_message)?;
+
+    commit_changes(&repo, &commit_message)?;
 
     Ok(())
 }
 
-fn commit_changes(commit_message: &str) -> anyhow::Result<()> {
-    let repo_path = ".";
-    let repo = Repository::open(repo_path)?;
+fn commit_changes(repo: &Repository, commit_message: &str) -> anyhow::Result<()> {
     let mut index = repo.index()?;
 
     let commit = inquire::Confirm::new("commit with this message?")
