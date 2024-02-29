@@ -12,4 +12,7 @@ pub enum Command {
 
     #[clap(subcommand)]
     Config(crate::config::Command),
+
+    #[clap(subcommand)]
+    Model(crate::model::Command),
 }

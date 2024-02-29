@@ -12,12 +12,16 @@ readme = "README.md"
 
 [dependencies]
 anyhow = "1.0.80"
+chrono = "0.4.34"
 clap = { version = "4.5.1", features = ["derive"] }
 directories = "5.0.1"
 git2 = "0.18.2"
 inquire = "0.7.0"
 openai = "1.0.0-alpha.14"
+reqwest = { version = "0.11.24", features = ["json"] }
 serde = "1.0.197"
+serde_json = "1.0.114"
+serde_yaml = "0.9.32"
 thiserror = "1.0.57"
 tokio = "1.36.0"
 toml = "0.8.10"

@@ -1,10 +1,13 @@
 mod cli;
 mod config;
+mod model;
 
+use chrono::TimeZone;
 use clap::Parser;
 
 use git2::{DiffFormat, Repository};
 use openai::chat::{ChatCompletionDelta, ChatCompletionMessage};
+use serde::Serialize;
 use std::env;
 use std::error::Error;
 use std::fmt::Write;
@@ -30,6 +33,30 @@ async fn main() -> Result<(), Box<dyn Error>> {
             }
         }
         Some(cli::Command::Config(config::Command::Set { key, value })) => config::set(key, value)?,
+        Some(cli::Command::Model(model::Command::List)) => {
+            let models = model::list().await?;
+
+            models.iter().for_each(|model| {
+                let created_at = model
+                    .created
+                    .map(|created_at| {
+                        chrono::Local
+                            .timestamp_opt(created_at, 0)
+                            .single()
+                            .map(|datetime| datetime.to_rfc2822())
+                    })
+                    .flatten()
+                    .unwrap_or("n/a".to_string());
+
+                println!(
+                    r#"{}
+  created_at: {}
+  owned_by: {}
+                "#,
+                    model.id, created_at, model.owned_by
+                );
+            });
+        }
     };
 
     Ok(())
