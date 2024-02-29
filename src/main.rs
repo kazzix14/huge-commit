@@ -22,9 +22,15 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     match args.command {
         None | Some(cli::Command::Commit) => commit().await?,
-        Some(cli::Command::Config(config::Command::Get { key })) => config::get(key),
-        Some(cli::Command::Config(config::Command::Set { key, value })) => config::set(key, value),
-    }
+        Some(cli::Command::Config(config::Command::Get { key })) => {
+            if let Some(value) = config::get(key)? {
+                println!("{}", value);
+            } else {
+                println!("not set");
+            }
+        }
+        Some(cli::Command::Config(config::Command::Set { key, value })) => config::set(key, value)?,
+    };
 
     Ok(())
 }
