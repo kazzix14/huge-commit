@@ -79,14 +79,20 @@ async fn commit(base_message: Option<String>) -> anyhow::Result<()> {
     }
 }
 
-fn commit_changes(repo: &Repository, commit_message: &str) -> anyhow::Result<()> {
-    let mut index = repo.index()?;
-
-    let commit = inquire::Confirm::new("commit with this message?")
-        .with_default(true)
+fn confirm(message: &'static str, default: bool) -> bool {
+    let confirm = inquire::Confirm::new(message)
+        .with_default(default)
         .prompt()
         .expect("Failed to get user input");
     println!();
+
+    confirm
+}
+
+fn commit_changes(repo: &Repository, commit_message: &str) -> anyhow::Result<()> {
+    let mut index = repo.index()?;
+
+    let commit = confirm("commit with this message?", true);
 
     if commit {
         let sig = repo.signature()?;
@@ -182,10 +188,8 @@ fn diff_has_change(diff: &git2::Diff) -> anyhow::Result<bool> {
 
 fn stage_all_files(repo: &Repository) -> anyhow::Result<()> {
     let mut index = repo.index()?;
-    let stage = inquire::Confirm::new("No changes to commit. stage all changes?")
-        .with_default(true)
-        .prompt()
-        .expect("Failed to get user input");
+
+    let stage = confirm("commit with this message?", true);
 
     println!();
 

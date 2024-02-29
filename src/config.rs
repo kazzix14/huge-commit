@@ -81,7 +81,7 @@ fn write_config(config: &Config) -> anyhow::Result<()> {
 }
 
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
-struct Config {
-    openai_api_key: Option<String>,
-    openai_model: Option<String>,
+pub struct Config {
+    pub openai_api_key: Option<String>,
+    pub openai_model: Option<String>,
 }

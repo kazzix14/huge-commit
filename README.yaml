@@ -23,15 +23,6 @@ installation:
   command: cargo install huge-commit
 
 usage:
-  command: |
-    Usage: huge-commit [COMMAND]
-
-    Commands:
-      commit
-      config
-      model
-      help    Print this message or the help of the given subcommand(s)
-
-    Options:
-      -h, --help  Print help
+  body: execute command bellow
+  command: huge-commit help
 

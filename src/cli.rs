@@ -7,6 +7,9 @@ pub struct Args {
 
     #[clap(short, long)]
     pub message: Option<String>,
+
+    #[clap(short = 'y', long, default_value = "false")]
+    pub assume_yes: bool,
 }
 
 #[derive(Debug, Subcommand)]
