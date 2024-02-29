@@ -205,7 +205,7 @@ fn stage_all_files(repo: &Repository, assume_yes: bool) -> anyhow::Result<()> {
     let stage = if assume_yes {
         true
     } else {
-        confirm("stage all changes?", true)
+        confirm("No changes to commit. stage all changes?", true)
     };
 
     println!();
