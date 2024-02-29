@@ -4,6 +4,9 @@ use clap::{Parser, Subcommand};
 pub struct Args {
     #[clap(subcommand)]
     pub command: Option<Command>,
+
+    #[clap(short, long)]
+    pub message: Option<String>,
 }
 
 #[derive(Debug, Subcommand)]

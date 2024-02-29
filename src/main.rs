@@ -23,7 +23,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let args = cli::Args::parse();
 
     match args.command {
-        None | Some(cli::Command::Commit) => commit().await?,
+        None | Some(cli::Command::Commit) => commit(args.message).await?,
         Some(cli::Command::Config(config::Command::Get { key })) => {
             if let Some(value) = config::get(key)? {
                 println!("{}", value);
@@ -60,7 +60,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-async fn commit() -> anyhow::Result<()> {
+async fn commit(base_message: Option<String>) -> anyhow::Result<()> {
     let repo = Repository::open(".")?;
     let diff = get_diff(&repo)?;
 
@@ -72,7 +72,7 @@ async fn commit() -> anyhow::Result<()> {
     if !diff_has_change(&diff)? {
         Err(UserError::NoChangesToCommit.into())
     } else {
-        let commit_message = gen_commit_message(&diff).await?;
+        let commit_message = gen_commit_message(base_message, &diff).await?;
 
         commit_changes(&repo, &commit_message)?;
         Ok(())
@@ -99,7 +99,7 @@ fn commit_changes(repo: &Repository, commit_message: &str) -> anyhow::Result<()>
     Ok(())
 }
 
-async fn gen_commit_message<'a>(diff: &git2::Diff<'a>) -> anyhow::Result<String> {
+async fn gen_commit_message<'a>(base_message: Option<String>, diff: &git2::Diff<'a>) -> anyhow::Result<String> {
     let mut diff_buf = String::new();
 
     let _ = &diff
@@ -122,6 +122,15 @@ async fn gen_commit_message<'a>(diff: &git2::Diff<'a>) -> anyhow::Result<String>
 
     openai::set_key(api_key);
 
+    let base_message_prompt = base_message.map(|message|
+format!(r#"
+I'll put rough comment message, you should write commit message based on it.
+rough commit message:
+```
+{}
+```
+"#, message)).unwrap_or("".to_string());
+
     let prompt = format!(
         r#"
 Write a commit message for the changes I will write at the end of this message.
@@ -131,14 +140,17 @@ Write a commit message for the changes I will write at the end of this message.
 - Only provide the commit message without starting with "Commit message:".
 - If you can't fit everything in 10 words, prioritize the most important information.
 - Use present tense verbs, e.g., "Add feature" instead of "Added feature".
-
+{base_message_prompt}
 diff:
 ```
-{}
+{diff}
 ```
 "#,
-        diff_buf
+        base_message_prompt = base_message_prompt,
+        diff = diff_buf,
     );
+
+    println!("{}", &prompt);
 
     let mut response_rx = ChatCompletionDelta::builder(
         &config::get(config::Item::OpenaiModel)?.unwrap_or("gpt-4-turbo-preview".to_string()),
