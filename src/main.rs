@@ -8,7 +8,6 @@ use clap::Parser;
 use git2::{DiffFormat, Repository};
 use openai::chat::{ChatCompletionDelta, ChatCompletionMessage};
 
-
 use std::error::Error;
 use std::fmt::Write;
 use std::io::Read;
@@ -70,10 +69,14 @@ async fn commit() -> anyhow::Result<()> {
     }
 
     let diff = get_diff(&repo)?;
-    let commit_message = gen_commit_message(&diff).await?;
+    if !diff_has_change(&diff)? {
+        Err(UserError::NoChangesToCommit.into())
+    } else {
+        let commit_message = gen_commit_message(&diff).await?;
 
-    commit_changes(&repo, &commit_message)?;
-    Ok(())
+        commit_changes(&repo, &commit_message)?;
+        Ok(())
+    }
 }
 
 fn commit_changes(repo: &Repository, commit_message: &str) -> anyhow::Result<()> {
