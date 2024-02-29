@@ -140,7 +140,7 @@ diff:
     );
 
     let mut response_rx = ChatCompletionDelta::builder(
-        "gpt-4-turbo-preview",
+        &config::get(config::Item::OpenaiModel)?.unwrap_or("gpt-4-turbo-preview".to_string()),
         [ChatCompletionMessage {
             role: openai::chat::ChatCompletionMessageRole::Assistant,
             content: Some(prompt),
