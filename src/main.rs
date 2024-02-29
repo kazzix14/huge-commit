@@ -139,6 +139,7 @@ Write a commit message for the changes I will write at the end of this message.
 - Only provide the commit message without starting with "Commit message:".
 - If you can't fit everything in 10 words, prioritize the most important information.
 - Use present tense verbs, e.g., "Add feature" instead of "Added feature".
+- Do not write things that aren't related to the changes. e.g., 'upgrading version of program itself does not means features is added or changed'
 {base_message_prompt}
 ```diff
 {diff}
@@ -147,45 +148,6 @@ Write a commit message for the changes I will write at the end of this message.
         base_message_prompt = base_message_prompt,
         diff = diff_buf,
     );
-
-
-    let prompt2 = format!(
-        r#"
-Write a commit message for the changes I will write at the end of this message.
-please write good git commit messages. A good commit message looks like this:
-
-```example
-Header line: explain the commit in one line (use the imperative)
-
-Body of commit message is a few lines of text, explaining things
-in more detail, possibly giving some background about the issue
-being fixed, etc etc.
-
-The body of the commit message can be several paragraphs, and
-please do proper word-wrap and keep columns shorter than about
-74 characters or so. That way "git log" will show things
-nicely even when it's indented.
-
-Make sure you explain your solution and why you're doing what you're
-doing, as opposed to describing what you're doing. Reviewers and your
-future self can read the patch, but might not understand why a
-particular solution was implemented.
-
-Reported-by: whoever-reported-it
-Signed-off-by: Your Name <you@example.com>
-```
-
-where that header line really should be meaningful, and really should be just one line. That header line is what is shown by tools like gitk and shortlog, and should summarize the change in one readable line of text, independently of the longer explanation. Please use verbs in the imperative in the commit message, as in "Fix bug that...", "Add file/feature ...", or "Make Subsurface..."
-
-diff:
-```
-{diff}
-```
-        "#, diff = diff_buf);
-
-
-    let prompt = prompt2;
-    println!("{}", &prompt);
 
     let mut response_rx = ChatCompletionDelta::builder(
         &config::get(config::Item::OpenaiModel)?.unwrap_or("gpt-4-turbo-preview".to_string()),
