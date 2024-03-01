@@ -1,7 +1,6 @@
 use crate::config;
 use crate::prompt_translator::PromptTranslator;
 use git2::DiffFormat;
-use openai::chat::{ChatCompletionDelta, ChatCompletionMessage};
 
 use std::fmt::Write;
 use std::io::Read;
