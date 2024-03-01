@@ -21,10 +21,6 @@ impl CommentGenerator {
     pub async fn gen_commit_message<'a>(&self, diff: &git2::Diff<'a>) -> anyhow::Result<String> {
         let diff = Self::stringify_diff(diff)?;
 
-        let api_key = config::get(config::Item::OpenaiApiKey)?.expect("openai-api-key not set");
-
-        openai::set_key(api_key);
-
         let base_message_prompt = self
             .base_message
             .as_ref()

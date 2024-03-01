@@ -3,6 +3,8 @@ use openai::chat::{
 };
 use tokio::sync::mpsc::Receiver;
 
+use crate::config;
+
 pub struct PromptTranslator {
     model: String,
 }
@@ -16,6 +18,10 @@ impl PromptTranslator {
         &self,
         prompt: String,
     ) -> anyhow::Result<Receiver<ChatCompletionGeneric<ChatCompletionChoiceDelta>>> {
+        let api_key = config::get(config::Item::OpenaiApiKey)?.expect("openai-api-key not set");
+
+        openai::set_key(api_key);
+
         Ok(ChatCompletionDelta::builder(
             &self.model,
             [ChatCompletionMessage {
