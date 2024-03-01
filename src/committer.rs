@@ -25,29 +25,28 @@ impl Committer {
         base_message: Option<String>,
         assume_yes: bool,
     ) -> anyhow::Result<()> {
-        let repo = Repository::open(".")?;
-        let diff = self.get_diff(&repo)?;
+        let diff = self.get_diff()?;
 
         if !self.diff_has_change(&diff)? {
-            self.stage_all_files(&repo, assume_yes)?;
+            self.stage_all_files(assume_yes)?;
         }
 
-        let diff = self.get_diff(&repo)?;
+        let diff = self.get_diff()?;
         if !self.diff_has_change(&diff)? {
             Err(crate::UserError::NoChangesToCommit.into())
         } else {
             let commit_message = self.gen_commit_message(base_message, &diff).await?;
 
-            self.commit_changes(&repo, &commit_message, assume_yes)?;
+            self.commit_changes(&commit_message, assume_yes)?;
             Ok(())
         }
     }
 
-    fn get_diff<'a>(&self, repo: &'a git2::Repository) -> anyhow::Result<git2::Diff<'a>> {
-        let index = repo.index()?;
-        let head_commit = repo.head()?.peel_to_commit()?;
+    fn get_diff(&self) -> anyhow::Result<git2::Diff<'_>> {
+        let index = self.repository.index()?;
+        let head_commit = self.repository.head()?.peel_to_commit()?;
         let head_tree = head_commit.tree()?;
-        let diff = repo.diff_tree_to_index(Some(&head_tree), Some(&index), None)?;
+        let diff = self.repository.diff_tree_to_index(Some(&head_tree), Some(&index), None)?;
 
         Ok(diff)
     }
@@ -56,8 +55,8 @@ impl Committer {
         Ok(0 < diff.stats()?.files_changed())
     }
 
-    fn stage_all_files(&self, repo: &Repository, assume_yes: bool) -> anyhow::Result<()> {
-        let mut index = repo.index()?;
+    fn stage_all_files(&self, assume_yes: bool) -> anyhow::Result<()> {
+        let mut index = self.repository.index()?;
 
         let stage = if assume_yes {
             true
@@ -81,11 +80,10 @@ impl Committer {
 
     fn commit_changes(
         &self,
-        repo: &Repository,
         commit_message: &str,
         assume_yes: bool,
     ) -> anyhow::Result<()> {
-        let mut index = repo.index()?;
+        let mut index = self.repository.index()?;
 
         let commit = if assume_yes {
             true
@@ -94,11 +92,11 @@ impl Committer {
         };
 
         if commit {
-            let sig = repo.signature()?;
+            let sig = self.repository.signature()?;
             let tree_id = index.write_tree()?;
-            let tree = repo.find_tree(tree_id)?;
-            let head = repo.head()?.peel_to_commit()?;
-            repo.commit(Some("HEAD"), &sig, &sig, commit_message, &tree, &[&head])?;
+            let tree = self.repository.find_tree(tree_id)?;
+            let head = self.repository.head()?.peel_to_commit()?;
+            self.repository.commit(Some("HEAD"), &sig, &sig, commit_message, &tree, &[&head])?;
         };
 
         Ok(())
