@@ -10,10 +10,11 @@ pub struct Committer {
 }
 
 impl Committer {
-    pub fn new(confirmor: Confirmor) -> anyhow::Result<Self> {
+    pub fn new(confirmor: Confirmor, comment_generator: CommentGenerator) -> anyhow::Result<Self> {
         Ok(Committer {
             repository: Repository::open(".")?,
             confirmor,
+            comment_generator,
         })
     }
 

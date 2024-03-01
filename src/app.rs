@@ -14,7 +14,7 @@ impl App {
     ) -> anyhow::Result<()> {
         let confirmor = Confirmor::new(assume_yes)?;
         let comment_generator = comment_generator::CommentGenerator::new()?;
-        let committer = Committer::new(confirmor)?;
+        let committer = Committer::new(confirmor, comment_generator)?;
 
         committer.commit(base_message).await?;
 
