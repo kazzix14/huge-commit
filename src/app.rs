@@ -12,10 +12,10 @@ impl App {
         base_message: Option<String>,
         assume_yes: bool,
     ) -> anyhow::Result<()> {
-        let confirmor = Confirmor::new()?;
+        let confirmor = Confirmor::new(assume_yes)?;
         let committer = Committer::new(confirmor)?;
 
-        committer.commit(base_message, assume_yes).await?;
+        committer.commit(base_message).await?;
 
         Ok(())
     }

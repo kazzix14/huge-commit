@@ -20,15 +20,11 @@ impl Committer {
         })
     }
 
-    pub async fn commit(
-        &self,
-        base_message: Option<String>,
-        assume_yes: bool,
-    ) -> anyhow::Result<()> {
+    pub async fn commit(&self, base_message: Option<String>) -> anyhow::Result<()> {
         let diff = self.get_diff()?;
 
         if !self.diff_has_change(&diff)? {
-            self.stage_all_files(assume_yes)?;
+            self.stage_all_files()?;
         }
 
         let diff = self.get_diff()?;
@@ -37,7 +33,7 @@ impl Committer {
         } else {
             let commit_message = self.gen_commit_message(base_message, &diff).await?;
 
-            self.commit_changes(&commit_message, assume_yes)?;
+            self.commit_changes(&commit_message)?;
             Ok(())
         }
     }
@@ -57,15 +53,12 @@ impl Committer {
         Ok(0 < diff.stats()?.files_changed())
     }
 
-    fn stage_all_files(&self, assume_yes: bool) -> anyhow::Result<()> {
+    fn stage_all_files(&self) -> anyhow::Result<()> {
         let mut index = self.repository.index()?;
 
-        let stage = if assume_yes {
-            true
-        } else {
-            self.confirmor
-                .confirm("No changes to commit. stage all changes?", true)
-        };
+        let stage = self
+            .confirmor
+            .confirm("No changes to commit. stage all changes?", true);
 
         println!();
 
@@ -80,14 +73,10 @@ impl Committer {
         }
     }
 
-    fn commit_changes(&self, commit_message: &str, assume_yes: bool) -> anyhow::Result<()> {
+    fn commit_changes(&self, commit_message: &str) -> anyhow::Result<()> {
         let mut index = self.repository.index()?;
 
-        let commit = if assume_yes {
-            true
-        } else {
-            self.confirmor.confirm("commit with this message?", true)
-        };
+        let commit = self.confirmor.confirm("commit with this message?", true);
 
         if commit {
             let sig = self.repository.signature()?;
