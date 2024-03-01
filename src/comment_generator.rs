@@ -1,9 +1,4 @@
-use crate::config;
 use crate::prompt_translator::PromptTranslator;
-use git2::DiffFormat;
-
-use std::fmt::Write;
-use std::io::Read;
 
 pub struct CommentGenerator {
     prompt_translator: PromptTranslator,
@@ -18,9 +13,7 @@ impl CommentGenerator {
         }
     }
 
-    pub async fn gen_commit_message<'a>(&self, diff: &git2::Diff<'a>) -> anyhow::Result<String> {
-        let diff = Self::stringify_diff(diff)?;
-
+    pub async fn gen_commit_message<'a>(&self, diff: String) -> anyhow::Result<String> {
         let base_message_prompt = self
             .base_message
             .as_ref()
@@ -70,27 +63,5 @@ Write a commit message for the changes I will write at the end of this message.
         println!();
 
         Ok(commit_message)
-    }
-
-    fn stringify_diff(diff: &git2::Diff) -> anyhow::Result<String> {
-        let mut diff_buf = String::new();
-
-        let _ = &diff
-            .print(DiffFormat::Patch, |_delta, _hunk, line| {
-                let mut buf = String::new();
-
-                line.content()
-                    .read_to_string(&mut buf)
-                    .expect("Failed to read line");
-
-                diff_buf
-                    .write_fmt(format_args!("{} {}", line.origin(), buf))
-                    .expect("Failed to write diff");
-
-                true
-            })
-            .expect("Failed to print diff");
-
-        Ok(diff_buf)
     }
 }

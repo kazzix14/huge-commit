@@ -1,7 +1,10 @@
 use crate::comment_generator::CommentGenerator;
 use crate::confirmor::Confirmor;
 
-use git2::Repository;
+use std::fmt::Write;
+use std::io::Read;
+
+use git2::{DiffFormat, Repository};
 
 pub struct Committer {
     repository: git2::Repository,
@@ -29,9 +32,10 @@ impl Committer {
         if !self.diff_has_change(&diff)? {
             Err(crate::UserError::NoChangesToCommit.into())
         } else {
+            let diff_str = Self::stringify_diff(&diff)?;
             let commit_message = self
                 .comment_generator
-                .gen_commit_message(&diff)
+                .gen_commit_message(diff_str)
                 .await?;
 
             self.commit_changes(&commit_message)?;
@@ -89,5 +93,27 @@ impl Committer {
         };
 
         Ok(())
+    }
+
+    fn stringify_diff(diff: &git2::Diff) -> anyhow::Result<String> {
+        let mut diff_buf = String::new();
+
+        let _ = &diff
+            .print(DiffFormat::Patch, |_delta, _hunk, line| {
+                let mut buf = String::new();
+
+                line.content()
+                    .read_to_string(&mut buf)
+                    .expect("Failed to read line");
+
+                diff_buf
+                    .write_fmt(format_args!("{} {}", line.origin(), buf))
+                    .expect("Failed to write diff");
+
+                true
+            })
+            .expect("Failed to print diff");
+
+        Ok(diff_buf)
     }
 }
