@@ -59,7 +59,7 @@ fn config_path() -> anyhow::Result<std::path::PathBuf> {
     Ok(config_path)
 }
 
-pub fn read_config() -> anyhow::Result<Config> {
+fn read_config() -> anyhow::Result<Config> {
     if !config_path()?.exists() {
         std::fs::File::create(config_path()?)?;
     }
@@ -69,7 +69,7 @@ pub fn read_config() -> anyhow::Result<Config> {
     Ok(toml::from_str::<Config>(&config).expect("Failed to parse config file"))
 }
 
-pub fn write_config(config: &Config) -> anyhow::Result<()> {
+fn write_config(config: &Config) -> anyhow::Result<()> {
     let mut file = File::create(config_path()?)?;
 
     file.write_all(toml::to_string(config)?.as_bytes())?;
