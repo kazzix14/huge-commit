@@ -1,5 +1,3 @@
-use git2::Repository;
-
 use crate::{committer::Committer, confirmor::Confirmor};
 
 pub struct App {}
