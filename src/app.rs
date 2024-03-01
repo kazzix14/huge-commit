@@ -6,23 +6,11 @@ use openai::chat::{ChatCompletionDelta, ChatCompletionMessage};
 use std::fmt::Write;
 use std::io::Read;
 
-pub struct App {
-    config: config::Config,
-}
+pub struct App {}
 
 impl App {
     pub fn new() -> anyhow::Result<Self> {
-        Ok(App {
-            config: config::read_config()?,
-        })
-    }
-
-    pub fn get_config(&self, key: &config::Item) -> Option<String> {
-        self.config.get(key)
-    }
-
-    pub fn set_config(&mut self, key: &config::Item, value: Option<String>) {
-        self.config.set(key, value)
+        Ok(App {})
     }
 
     pub async fn commit(

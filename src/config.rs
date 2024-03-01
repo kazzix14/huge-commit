@@ -1,6 +1,6 @@
 use clap::Subcommand;
 
-use std::{fs::File, io::Write};
+use std::{borrow::Borrow, fs::File, io::Write};
 
 #[derive(Debug, Subcommand)]
 pub enum Command {
@@ -25,10 +25,10 @@ pub enum Item {
     OpenaiModel,
 }
 
-pub fn get(key: Item) -> anyhow::Result<Option<String>> {
+pub fn get<K: Borrow<Item>>(key: K) -> anyhow::Result<Option<String>> {
     let config = read_config()?;
 
-    let value = match key {
+    let value = match key.borrow() {
         Item::OpenaiApiKey => config.openai_api_key,
         Item::OpenaiModel => config.openai_model,
     };
@@ -36,10 +36,10 @@ pub fn get(key: Item) -> anyhow::Result<Option<String>> {
     Ok(value)
 }
 
-pub fn set(key: Item, value: Option<String>) -> anyhow::Result<()> {
+pub fn set<K: Borrow<Item>>(key: K, value: Option<String>) -> anyhow::Result<()> {
     let mut config = read_config()?;
 
-    match key {
+    match key.borrow() {
         Item::OpenaiApiKey => config.openai_api_key = value,
         Item::OpenaiModel => config.openai_model = value,
     };
@@ -81,20 +81,4 @@ pub fn write_config(config: &Config) -> anyhow::Result<()> {
 pub struct Config {
     pub openai_api_key: Option<String>,
     pub openai_model: Option<String>,
-}
-
-impl Config {
-    pub fn get(&self, key: &Item) -> Option<String> {
-        match key {
-            Item::OpenaiApiKey => self.openai_api_key.clone(),
-            Item::OpenaiModel => self.openai_model.clone(),
-        }
-    }
-
-    pub fn set(&mut self, key: &Item, value: Option<String>) {
-        match key {
-            Item::OpenaiApiKey => self.openai_api_key = value,
-            Item::OpenaiModel => self.openai_model = value,
-        }
-    }
 }

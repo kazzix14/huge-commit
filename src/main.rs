@@ -19,19 +19,19 @@ enum UserError {
 async fn main() -> Result<(), Box<dyn Error>> {
     let args = cli::Args::parse();
 
-    let mut app = App::new()?;
+    let app = App::new()?;
 
     match args.command {
         None | Some(cli::Command::Commit) => app.commit(args.message, args.assume_yes).await?,
         Some(cli::Command::Config(config::Command::Get { key })) => {
-            if let Some(value) = app.get_config(&key) {
+            if let Some(value) = config::get(&key)? {
                 println!("{}", value);
             } else {
                 println!("not set");
             }
         }
         Some(cli::Command::Config(config::Command::Set { key, value })) => {
-            app.set_config(&key, Some(value))
+            config::set(&key, Some(value))?
         }
         Some(cli::Command::Model(model::Command::List)) => {
             let models = model::list().await?;
