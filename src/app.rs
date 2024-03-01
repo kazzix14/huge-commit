@@ -1,4 +1,4 @@
-use crate::{committer::Committer, confirmor::Confirmor};
+use crate::{comment_generator, committer::Committer, confirmor::Confirmor};
 
 pub struct App {}
 
@@ -13,6 +13,7 @@ impl App {
         assume_yes: bool,
     ) -> anyhow::Result<()> {
         let confirmor = Confirmor::new(assume_yes)?;
+        let comment_generator = comment_generator::CommentGenerator::new()?;
         let committer = Committer::new(confirmor)?;
 
         committer.commit(base_message).await?;
