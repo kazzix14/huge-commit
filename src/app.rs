@@ -1,11 +1,8 @@
-use crate::{cli, config};
-use chrono::TimeZone;
-use clap::Parser;
+use crate::config;
 
 use git2::{DiffFormat, Repository};
 use openai::chat::{ChatCompletionDelta, ChatCompletionMessage};
 
-use std::error::Error;
 use std::fmt::Write;
 use std::io::Read;
 

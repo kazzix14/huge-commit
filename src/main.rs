@@ -7,12 +7,8 @@ use app::App;
 use chrono::TimeZone;
 use clap::Parser;
 
-use git2::{DiffFormat, Repository};
-use openai::chat::{ChatCompletionDelta, ChatCompletionMessage};
-
 use std::error::Error;
 use std::fmt::Write;
-use std::io::Read;
 
 #[derive(Debug, thiserror::Error)]
 enum UserError {
