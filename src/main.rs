@@ -1,6 +1,8 @@
 mod app;
 mod cli;
+mod committer;
 mod config;
+mod confirmor;
 mod model;
 
 use app::App;
