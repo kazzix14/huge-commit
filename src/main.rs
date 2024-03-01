@@ -5,6 +5,7 @@ mod config;
 mod confirmor;
 mod model;
 mod comment_generator;
+mod prompt_translator;
 
 use app::App;
 use chrono::TimeZone;

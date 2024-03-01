@@ -1,4 +1,5 @@
 use crate::config;
+use crate::prompt_translator::PromptTranslator;
 use git2::DiffFormat;
 use openai::chat::{ChatCompletionDelta, ChatCompletionMessage};
 
@@ -6,12 +7,16 @@ use std::fmt::Write;
 use std::io::Read;
 
 pub struct CommentGenerator {
+    prompt_translator: PromptTranslator,
     base_message: Option<String>,
 }
 
 impl CommentGenerator {
-    pub fn new(base_message: Option<String>) -> anyhow::Result<Self> {
-        Ok(CommentGenerator { base_message })
+    pub fn new(prompt_translator: PromptTranslator, base_message: Option<String>) -> Self {
+        CommentGenerator {
+            prompt_translator,
+            base_message,
+        }
     }
 
     pub async fn gen_commit_message<'a>(&self, diff: &git2::Diff<'a>) -> anyhow::Result<String> {
@@ -56,18 +61,7 @@ Write a commit message for the changes I will write at the end of this message.
 "#
         );
 
-        let mut response_rx = ChatCompletionDelta::builder(
-            &config::get(config::Item::OpenaiModel)?.unwrap_or("gpt-4-turbo-preview".to_string()),
-            [ChatCompletionMessage {
-                role: openai::chat::ChatCompletionMessageRole::Assistant,
-                content: Some(prompt),
-                name: None,
-                function_call: None,
-            }],
-        )
-        .create_stream()
-        .await?;
-
+        let mut response_rx = self.prompt_translator.translate(prompt).await?;
         let mut commit_message = String::new();
         while let Some(response) = response_rx.recv().await {
             response.choices.iter().for_each(|choice| {
