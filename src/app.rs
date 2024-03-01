@@ -13,10 +13,10 @@ impl App {
         assume_yes: bool,
     ) -> anyhow::Result<()> {
         let confirmor = Confirmor::new(assume_yes)?;
-        let comment_generator = comment_generator::CommentGenerator::new()?;
+        let comment_generator = comment_generator::CommentGenerator::new(base_message)?;
         let committer = Committer::new(confirmor, comment_generator)?;
 
-        committer.commit(base_message).await?;
+        committer.commit().await?;
 
         Ok(())
     }

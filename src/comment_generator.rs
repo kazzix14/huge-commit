@@ -5,18 +5,16 @@ use openai::chat::{ChatCompletionDelta, ChatCompletionMessage};
 use std::fmt::Write;
 use std::io::Read;
 
-pub struct CommentGenerator {}
+pub struct CommentGenerator {
+    base_message: Option<String>,
+}
 
 impl CommentGenerator {
-    pub fn new() -> anyhow::Result<Self> {
-        Ok(CommentGenerator {})
+    pub fn new(base_message: Option<String>) -> anyhow::Result<Self> {
+        Ok(CommentGenerator { base_message })
     }
 
-    pub async fn gen_commit_message<'a>(
-        &self,
-        base_message: Option<String>,
-        diff: &git2::Diff<'a>,
-    ) -> anyhow::Result<String> {
+    pub async fn gen_commit_message<'a>(&self, diff: &git2::Diff<'a>) -> anyhow::Result<String> {
         let mut diff_buf = String::new();
 
         let _ = &diff
@@ -39,7 +37,9 @@ impl CommentGenerator {
 
         openai::set_key(api_key);
 
-        let base_message_prompt = base_message
+        let base_message_prompt = self
+            .base_message
+            .as_ref()
             .map(|message| {
                 format!(
                     r#"

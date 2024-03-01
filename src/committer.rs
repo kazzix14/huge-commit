@@ -18,7 +18,7 @@ impl Committer {
         })
     }
 
-    pub async fn commit(&self, base_message: Option<String>) -> anyhow::Result<()> {
+    pub async fn commit(&self) -> anyhow::Result<()> {
         let diff = self.get_diff()?;
 
         if !self.diff_has_change(&diff)? {
@@ -31,7 +31,7 @@ impl Committer {
         } else {
             let commit_message = self
                 .comment_generator
-                .gen_commit_message(base_message, &diff)
+                .gen_commit_message(&diff)
                 .await?;
 
             self.commit_changes(&commit_message)?;
