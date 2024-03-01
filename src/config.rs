@@ -1,9 +1,6 @@
 use clap::Subcommand;
 
-use std::{
-    fs::File,
-    io::Write,
-};
+use std::{fs::File, io::Write};
 
 #[derive(Debug, Subcommand)]
 pub enum Command {
@@ -39,12 +36,12 @@ pub fn get(key: Item) -> anyhow::Result<Option<String>> {
     Ok(value)
 }
 
-pub fn set(key: Item, value: String) -> anyhow::Result<()> {
+pub fn set(key: Item, value: Option<String>) -> anyhow::Result<()> {
     let mut config = read_config()?;
 
     match key {
-        Item::OpenaiApiKey => config.openai_api_key = Some(value),
-        Item::OpenaiModel => config.openai_model = Some(value),
+        Item::OpenaiApiKey => config.openai_api_key = value,
+        Item::OpenaiModel => config.openai_model = value,
     };
 
     write_config(&config)?;
@@ -62,7 +59,7 @@ fn config_path() -> anyhow::Result<std::path::PathBuf> {
     Ok(config_path)
 }
 
-fn read_config() -> anyhow::Result<Config> {
+pub fn read_config() -> anyhow::Result<Config> {
     if !config_path()?.exists() {
         std::fs::File::create(config_path()?)?;
     }
@@ -72,7 +69,7 @@ fn read_config() -> anyhow::Result<Config> {
     Ok(toml::from_str::<Config>(&config).expect("Failed to parse config file"))
 }
 
-fn write_config(config: &Config) -> anyhow::Result<()> {
+pub fn write_config(config: &Config) -> anyhow::Result<()> {
     let mut file = File::create(config_path()?)?;
 
     file.write_all(toml::to_string(config)?.as_bytes())?;
@@ -84,4 +81,20 @@ fn write_config(config: &Config) -> anyhow::Result<()> {
 pub struct Config {
     pub openai_api_key: Option<String>,
     pub openai_model: Option<String>,
+}
+
+impl Config {
+    pub fn get(&self, key: &Item) -> Option<String> {
+        match key {
+            Item::OpenaiApiKey => self.openai_api_key.clone(),
+            Item::OpenaiModel => self.openai_model.clone(),
+        }
+    }
+
+    pub fn set(&mut self, key: &Item, value: Option<String>) {
+        match key {
+            Item::OpenaiApiKey => self.openai_api_key = value,
+            Item::OpenaiModel => self.openai_model = value,
+        }
+    }
 }
