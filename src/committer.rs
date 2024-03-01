@@ -46,7 +46,9 @@ impl Committer {
         let index = self.repository.index()?;
         let head_commit = self.repository.head()?.peel_to_commit()?;
         let head_tree = head_commit.tree()?;
-        let diff = self.repository.diff_tree_to_index(Some(&head_tree), Some(&index), None)?;
+        let diff = self
+            .repository
+            .diff_tree_to_index(Some(&head_tree), Some(&index), None)?;
 
         Ok(diff)
     }
@@ -78,11 +80,7 @@ impl Committer {
         }
     }
 
-    fn commit_changes(
-        &self,
-        commit_message: &str,
-        assume_yes: bool,
-    ) -> anyhow::Result<()> {
+    fn commit_changes(&self, commit_message: &str, assume_yes: bool) -> anyhow::Result<()> {
         let mut index = self.repository.index()?;
 
         let commit = if assume_yes {
@@ -96,7 +94,8 @@ impl Committer {
             let tree_id = index.write_tree()?;
             let tree = self.repository.find_tree(tree_id)?;
             let head = self.repository.head()?.peel_to_commit()?;
-            self.repository.commit(Some("HEAD"), &sig, &sig, commit_message, &tree, &[&head])?;
+            self.repository
+                .commit(Some("HEAD"), &sig, &sig, commit_message, &tree, &[&head])?;
         };
 
         Ok(())
