@@ -8,7 +8,6 @@ use chrono::TimeZone;
 use clap::Parser;
 
 use std::error::Error;
-use std::fmt::Write;
 
 #[derive(Debug, thiserror::Error)]
 enum UserError {

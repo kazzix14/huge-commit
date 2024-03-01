@@ -150,6 +150,8 @@ impl App {
                 format!(
                     r#"
 I'll put rough comment message, you should write commit message based on it.
+If the base message looks like a command, that means a user executed it on the codebase. put the command inside your message.
+e.g. `rubocop -a` -> "Run `rubocop -a`"
 ```rough commit message
 {}
 ```
@@ -168,7 +170,7 @@ Write a commit message for the changes I will write at the end of this message.
 - Only provide the commit message without starting with "Commit message:".
 - If you can't fit everything in 10 words, prioritize the most important information.
 - Use present tense verbs, e.g., "Add feature" instead of "Added feature".
-- Do not write things that aren't related to the changes. e.g., 'upgrading version of program itself does not means features is added or changed'
+- Do not write things that aren't related to the changes. Meaning, upgrading version of program itself does not means features is added or changed
 {base_message_prompt}
 ```diff
 {diff}
