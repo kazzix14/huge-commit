@@ -4,6 +4,7 @@ mod committer;
 mod config;
 mod confirmor;
 mod model;
+mod comment_generator;
 
 use app::App;
 use chrono::TimeZone;
