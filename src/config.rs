@@ -23,6 +23,7 @@ pub enum Command {
 pub enum Item {
     OpenaiApiKey,
     OpenaiModel,
+    ConfigPath,
 }
 
 pub fn get<K: Borrow<Item>>(key: K) -> anyhow::Result<Option<String>> {
@@ -31,6 +32,7 @@ pub fn get<K: Borrow<Item>>(key: K) -> anyhow::Result<Option<String>> {
     let value = match key.borrow() {
         Item::OpenaiApiKey => config.openai_api_key,
         Item::OpenaiModel => config.openai_model,
+        Item::ConfigPath => Some(config_path()?.to_string_lossy().to_string()),
     };
 
     Ok(value)
@@ -42,6 +44,7 @@ pub fn set<K: Borrow<Item>>(key: K, value: Option<String>) -> anyhow::Result<()>
     match key.borrow() {
         Item::OpenaiApiKey => config.openai_api_key = value,
         Item::OpenaiModel => config.openai_model = value,
+        Item::ConfigPath => unimplemented!("Setting config path is currently not supported."),
     };
 
     write_config(&config)?;
