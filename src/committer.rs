@@ -62,20 +62,24 @@ impl Committer {
 
     fn read_custom_ignore_patterns(path: &str) -> anyhow::Result<Vec<String>> {
         let path = std::path::Path::new(path);
-        let file = std::fs::File::open(path).map_err(|e| git2::Error::from_str(&e.to_string()))?;
+        let file = std::fs::File::open(path);
 
-        let lines = std::io::BufReader::new(file).lines();
-        let mut patterns = Vec::new();
+        Ok(file
+            .and_then(|file| {
+                let lines = std::io::BufReader::new(file).lines();
+                let mut patterns = Vec::new();
 
-        for line in lines {
-            let line = line.map_err(|e| git2::Error::from_str(&e.to_string()))?;
-            if line.trim().is_empty() || line.starts_with('#') {
-                continue;
-            }
-            patterns.push(line);
-        }
+                for line in lines {
+                    let line = line?;
+                    if line.trim().is_empty() || line.starts_with('#') {
+                        continue;
+                    }
+                    patterns.push(line);
+                }
 
-        Ok(patterns)
+                Ok(patterns)
+            })
+            .unwrap_or(Vec::new()))
     }
 
     fn diff_has_change(&self, diff: &git2::Diff) -> anyhow::Result<bool> {
