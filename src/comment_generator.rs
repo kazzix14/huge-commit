@@ -37,12 +37,26 @@ e.g. `rubocop -a` -> "Run `rubocop -a`"
 Write a commit message for the changes I will write at the end of this message.
 - Limit the first line to a maximum of 10 words.
 - Explain the reason behind the changes, not the specific details of what was changed.
-- Focus on the big picture, rather than small details.
+- Focus on the big picture, rather than small details. this does not mean you should not write specific name or details. you should write name of api, options, context, etc. if it is an essence.
 - Only provide the commit message without starting with "Commit message:".
 - If you can't fit everything in 10 words, prioritize the most important information.
 - Use present tense verbs, e.g., "Add feature" instead of "Added feature".
 - Do not write things that aren't related to the changes. Meaning, upgrading version of program itself does not means features is added or changed
+
+basic comment message format is `action + subject + details`.
+you may choose action from following list. if you can't find suitable action, you can use other action or write your own action.
+- feat: new feature
+- fix: bug fix
+- docs: documentation
+- refactor: A code change that neither fixes a bug nor adds a feature. also includes white space, formatting, missing semi-colons.
+- enhance: A code change that improves UX. like performance, messages.
+- test: Adding missing tests or correcting existing tests
+- build: Changes that affect the build system, includes ci
+- deps: dependency updates
+- or you can add your own action, if you can't find suitable action from above list.
+
 {base_message_prompt}
+
 ```diff
 {diff}
 ```
