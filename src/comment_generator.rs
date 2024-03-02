@@ -43,7 +43,7 @@ Write a commit message for the changes I will write at the end of this message.
 - Use present tense verbs, e.g., "Add feature" instead of "Added feature".
 - Do not write things that aren't related to the changes. Meaning, upgrading version of program itself does not means features is added or changed
 
-basic comment message format is `verb` + subject + details`. you should not start with `action:`.
+basic comment message format is `verb` + subject + details`. you should not start with `action:` or `action(..):`. use normal sentence.
 you may choose action from following list. if you can't find suitable action, you can use other action or write your own action.
 - `feat` new feature
 - `fix` bug fix
