@@ -1,10 +1,10 @@
 use crate::comment_generator::CommentGenerator;
 use crate::confirmor::Confirmor;
 
-use std::fmt::Write;
 use std::io::Read;
+use std::{fmt::Write, io::BufRead};
 
-use git2::{DiffFormat, Repository};
+use git2::{DiffFormat, DiffOptions, Repository};
 
 pub struct Committer {
     repository: git2::Repository,
@@ -14,8 +14,10 @@ pub struct Committer {
 
 impl Committer {
     pub fn new(confirmor: Confirmor, comment_generator: CommentGenerator) -> anyhow::Result<Self> {
+        let repository = Repository::open(".")?;
+
         Ok(Committer {
-            repository: Repository::open(".")?,
+            repository,
             confirmor,
             comment_generator,
         })
@@ -33,10 +35,7 @@ impl Committer {
             Err(crate::UserError::NoChangesToCommit.into())
         } else {
             let diff_str = Self::stringify_diff(&diff)?;
-            let commit_message = self
-                .comment_generator
-                .gen_commit_message(diff_str)
-                .await?;
+            let commit_message = self.comment_generator.gen_commit_message(diff_str).await?;
 
             self.commit_changes(&commit_message)?;
             Ok(())
@@ -47,11 +46,36 @@ impl Committer {
         let index = self.repository.index()?;
         let head_commit = self.repository.head()?.peel_to_commit()?;
         let head_tree = head_commit.tree()?;
-        let diff = self
-            .repository
-            .diff_tree_to_index(Some(&head_tree), Some(&index), None)?;
+
+        let mut opts = DiffOptions::new();
+        let ignore_patterns = Self::read_custom_ignore_patterns(".hcignore")?;
+        for pattern in ignore_patterns {
+            opts.pathspec(pattern);
+        }
+
+        let diff =
+            self.repository
+                .diff_tree_to_index(Some(&head_tree), Some(&index), Some(&mut opts))?;
 
         Ok(diff)
+    }
+
+    fn read_custom_ignore_patterns(path: &str) -> anyhow::Result<Vec<String>> {
+        let path = std::path::Path::new(path);
+        let file = std::fs::File::open(&path).map_err(|e| git2::Error::from_str(&e.to_string()))?;
+
+        let lines = std::io::BufReader::new(file).lines();
+        let mut patterns = Vec::new();
+
+        for line in lines {
+            let line = line.map_err(|e| git2::Error::from_str(&e.to_string()))?;
+            if line.trim().is_empty() || line.starts_with('#') {
+                continue;
+            }
+            patterns.push(line);
+        }
+
+        Ok(patterns)
     }
 
     fn diff_has_change(&self, diff: &git2::Diff) -> anyhow::Result<bool> {
