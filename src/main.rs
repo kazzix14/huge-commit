@@ -25,8 +25,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let app = App::new()?;
 
+    let base_message = args.base_message.map(|message| message.join(" "));
+
     match args.command {
-        None | Some(cli::Command::Commit) => app.commit(args.base_message, args.assume_yes).await?,
+        None | Some(cli::Command::Commit) => app.commit(base_message, args.assume_yes).await?,
         Some(cli::Command::Config(config::Command::Get { key })) => {
             if let Some(value) = config::get(&key)? {
                 println!("{}", value);
