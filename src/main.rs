@@ -30,14 +30,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
     match args.command {
         None | Some(cli::Command::Commit) => app.commit(base_message, args.assume_yes).await?,
         Some(cli::Command::Config(config::Command::Get { key })) => {
-            if let Some(value) = config::get(&key)? {
+            if let Some(value) = config::get(key)? {
                 println!("{}", value);
             } else {
                 println!("not set");
             }
         }
         Some(cli::Command::Config(config::Command::Set { key, value })) => {
-            config::set(&key, Some(value))?
+            config::set(key, Some(value))?
         }
         Some(cli::Command::Model(model::Command::List)) => {
             let models = model::list().await?;

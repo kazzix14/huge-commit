@@ -9,7 +9,7 @@ impl Confirmor {
 
     pub fn confirm(&self, message: &'static str, default: bool) -> bool {
         if self.assume_yes {
-            return true;
+            true
         } else {
             let confirm = inquire::Confirm::new(message)
                 .with_default(default)
