@@ -8,7 +8,12 @@ pub struct Args {
     #[clap(short = 'm', long, help = "The base message to use for the commit.", num_args(1..))]
     pub base_message: Option<Vec<String>>,
 
-    #[clap(short = 'y', long, default_value = "false", help = "Assume yes to all prompts.")]
+    #[clap(
+        short = 'y',
+        long,
+        default_value = "false",
+        help = "Assume yes to all prompts."
+    )]
     pub assume_yes: bool,
 }
 
