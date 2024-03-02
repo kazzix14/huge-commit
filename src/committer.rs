@@ -62,7 +62,7 @@ impl Committer {
 
     fn read_custom_ignore_patterns(path: &str) -> anyhow::Result<Vec<String>> {
         let path = std::path::Path::new(path);
-        let file = std::fs::File::open(&path).map_err(|e| git2::Error::from_str(&e.to_string()))?;
+        let file = std::fs::File::open(path).map_err(|e| git2::Error::from_str(&e.to_string()))?;
 
         let lines = std::io::BufReader::new(file).lines();
         let mut patterns = Vec::new();
