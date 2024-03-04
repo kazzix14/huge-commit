@@ -2,6 +2,7 @@ use crate::comment_generator::CommentGenerator;
 use crate::confirmor::Confirmor;
 
 use std::io::Read;
+use std::path::Path;
 use std::{fmt::Write, io::BufRead};
 
 use git2::{DiffFormat, DiffOptions, Repository};
@@ -14,6 +15,13 @@ pub struct Committer {
 
 impl Committer {
     pub fn new(confirmor: Confirmor, comment_generator: CommentGenerator) -> anyhow::Result<Self> {
+        while let Err(err) = Repository::open(".") {
+            if let Some(parent) = Path::new("..").canonicalize().ok() {
+                std::env::set_current_dir(parent)?;
+            } else {
+                return Err(err.into());
+            }
+        }
         let repository = Repository::open(".")?;
 
         Ok(Committer {
