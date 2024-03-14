@@ -25,6 +25,7 @@ pub enum Item {
     OpenaiModel,
     ConfigPath,
     AnthropicApiKey,
+    AnthropicModel,
 }
 
 pub fn get<K: Borrow<Item>>(key: K) -> anyhow::Result<Option<String>> {
@@ -34,6 +35,7 @@ pub fn get<K: Borrow<Item>>(key: K) -> anyhow::Result<Option<String>> {
         Item::OpenaiApiKey => config.openai_api_key,
         Item::AnthropicApiKey => config.anthropic_api_key,
         Item::OpenaiModel => config.openai_model,
+        Item::AnthropicModel => config.anthropic_model,
         Item::ConfigPath => Some(config_path()?.to_string_lossy().to_string()),
     };
 
@@ -47,6 +49,7 @@ pub fn set<K: Borrow<Item>>(key: K, value: Option<String>) -> anyhow::Result<()>
         Item::OpenaiApiKey => config.openai_api_key = value,
         Item::AnthropicApiKey => config.anthropic_api_key = value,
         Item::OpenaiModel => config.openai_model = value,
+        Item::AnthropicModel => config.anthropic_model = value,
         Item::ConfigPath => unimplemented!("Setting config path is currently not supported."),
     };
 
@@ -86,6 +89,7 @@ fn write_config(config: &Config) -> anyhow::Result<()> {
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct Config {
     pub openai_api_key: Option<String>,
-    pub anthropic_api_key: Option<String>,
     pub openai_model: Option<String>,
+    pub anthropic_api_key: Option<String>,
+    pub anthropic_model: Option<String>,
 }
