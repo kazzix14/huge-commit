@@ -3,7 +3,6 @@ use futures::StreamExt;
 use openai::chat::{
     ChatCompletionChoiceDelta, ChatCompletionDelta, ChatCompletionGeneric, ChatCompletionMessage,
 };
-use tokio::sync::mpsc::Receiver;
 
 use crate::config;
 
