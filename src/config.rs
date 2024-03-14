@@ -1,5 +1,4 @@
 use clap::Subcommand;
-
 use std::{borrow::Borrow, fs::File, io::Write};
 
 #[derive(Debug, Subcommand)]
@@ -21,6 +20,7 @@ pub enum Command {
 
 #[derive(Debug, Clone, Copy, clap::ValueEnum)]
 pub enum Item {
+    ModelProvider,
     OpenaiApiKey,
     OpenaiModel,
     ConfigPath,
@@ -32,6 +32,7 @@ pub fn get<K: Borrow<Item>>(key: K) -> anyhow::Result<Option<String>> {
     let config = read_config()?;
 
     let value = match key.borrow() {
+        Item::ModelProvider => config.model_provider.map(|p| p.to_string()),
         Item::OpenaiApiKey => config.openai_api_key,
         Item::AnthropicApiKey => config.anthropic_api_key,
         Item::OpenaiModel => config.openai_model,
@@ -46,6 +47,7 @@ pub fn set<K: Borrow<Item>>(key: K, value: Option<String>) -> anyhow::Result<()>
     let mut config = read_config()?;
 
     match key.borrow() {
+        Item::ModelProvider => config.model_provider = value.map(|v| Into::<ModelProvider>::into(v)),
         Item::OpenaiApiKey => config.openai_api_key = value,
         Item::AnthropicApiKey => config.anthropic_api_key = value,
         Item::OpenaiModel => config.openai_model = value,
@@ -86,8 +88,25 @@ fn write_config(config: &Config) -> anyhow::Result<()> {
     Ok(())
 }
 
+#[derive(Debug, serde::Deserialize, serde::Serialize, derive_more::Display)]
+pub enum ModelProvider {
+    OpenAI,
+    Anthropic,
+}
+
+impl From<String> for ModelProvider {
+    fn from(s: String) -> Self {
+        match s.to_lowercase().as_str() {
+            "openai" => ModelProvider::OpenAI,
+            "anthropic" => ModelProvider::Anthropic,
+            _ => panic!("Invalid model provider"),
+        }
+    }
+}
+
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct Config {
+    pub model_provider: Option<ModelProvider>,
     pub openai_api_key: Option<String>,
     pub openai_model: Option<String>,
     pub anthropic_api_key: Option<String>,
