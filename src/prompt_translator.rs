@@ -1,9 +1,18 @@
+use futures::StreamExt;
 use openai::chat::{
     ChatCompletionChoiceDelta, ChatCompletionDelta, ChatCompletionGeneric, ChatCompletionMessage,
 };
 use tokio::sync::mpsc::Receiver;
+use futures::Stream;
 
 use crate::config;
+
+// trait PromptTranslator {
+//     pub fn translate(
+//         &self,
+//         prompt: String,
+//     ) -> anyhow::Result<Receiver<String>>;
+// }
 
 pub struct PromptTranslator {
     model: String,
@@ -14,15 +23,12 @@ impl PromptTranslator {
         Self { model }
     }
 
-    pub async fn translate(
-        &self,
-        prompt: String,
-    ) -> anyhow::Result<Receiver<ChatCompletionGeneric<ChatCompletionChoiceDelta>>> {
+    pub async fn translate(&self, prompt: String) -> anyhow::Result<impl Stream<Item = String>> {
         let api_key = config::get(config::Item::OpenaiApiKey)?.expect("openai-api-key not set");
 
         openai::set_key(api_key);
 
-        Ok(ChatCompletionDelta::builder(
+        let translated = ChatCompletionDelta::builder(
             &self.model,
             [ChatCompletionMessage {
                 role: openai::chat::ChatCompletionMessageRole::Assistant,
@@ -32,6 +38,31 @@ impl PromptTranslator {
             }],
         )
         .create_stream()
-        .await?)
+        .await?;
+
+        let stream = tokio_stream::wrappers::ReceiverStream::new(translated);
+        let stream = stream.map(|data: ChatCompletionGeneric<ChatCompletionChoiceDelta>| {
+            data.choices
+                .iter()
+                .map(|c| c.delta.clone().content)
+                .filter(|c| c.is_some())
+                .map(|f| f.unwrap())
+                .collect::<Vec<String>>()
+                .join(" ")
+        });
+
+
+        Ok(stream)
+        //Ok(stream)
     }
 }
+
+// while let Some(response) = response_rx.recv().await {
+//     response.choices.iter().for_each(|choice| {
+//         if let Some(content) = &choice.delta.content {
+//             commit_message.push_str(content);
+//             print!("{}", content);
+//             std::io::Write::flush(&mut std::io::stdout()).unwrap();
+//         }
+//     });
+// }

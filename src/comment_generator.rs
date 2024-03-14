@@ -1,4 +1,5 @@
 use crate::prompt_translator::PromptTranslator;
+use futures::StreamExt;
 
 pub struct CommentGenerator {
     prompt_translator: PromptTranslator,
@@ -64,15 +65,13 @@ you may choose action from following list. if you can't find suitable action, yo
         );
 
         let mut response_rx = self.prompt_translator.translate(prompt).await?;
+
+
         let mut commit_message = String::new();
-        while let Some(response) = response_rx.recv().await {
-            response.choices.iter().for_each(|choice| {
-                if let Some(content) = &choice.delta.content {
-                    commit_message.push_str(content);
-                    print!("{}", content);
-                    std::io::Write::flush(&mut std::io::stdout()).unwrap();
-                }
-            });
+        while let Some(chunk) = response_rx.next().await {
+            commit_message.push_str(&chunk.to_string());
+            print!("{}", chunk);
+            std::io::Write::flush(&mut std::io::stdout()).unwrap();
         }
         println!();
 
