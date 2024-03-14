@@ -38,6 +38,7 @@ e.g. `rubocop -a` -> "Run `rubocop -a`"
             r#"
 Write a commit message for the changes I will write at the end of this message.
 - Limit the first line to a maximum of 10 words.
+- return commit message in only 1 line.
 - Explain the reason behind the changes.
 - Focus on the big picture, rather than small details. this does not mean you should not write specific name or details. you should write name of api, options, context, etc. if it has specific name or it is important.
 - Only provide the commit message without starting with "Commit message:".
