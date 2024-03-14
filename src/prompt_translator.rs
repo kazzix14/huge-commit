@@ -76,6 +76,7 @@ impl PromptTranslator for ClaudeTranslator {
                 "model": self.model,
                 "stream": true,
                 "max_tokens": 400,
+                "temperature": 0.7,
             }))
             .send()
             .await?;
