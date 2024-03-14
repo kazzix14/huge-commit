@@ -32,7 +32,7 @@ pub fn get<K: Borrow<Item>>(key: K) -> anyhow::Result<Option<String>> {
     let config = read_config()?;
 
     let value = match key.borrow() {
-        Item::ModelProvider => config.model_provider.map(|p| p.to_string()),
+        Item::ModelProvider => config.model_provider.map(|v| v.to_string()),
         Item::OpenaiApiKey => config.openai_api_key,
         Item::AnthropicApiKey => config.anthropic_api_key,
         Item::OpenaiModel => config.openai_model,
@@ -47,7 +47,7 @@ pub fn set<K: Borrow<Item>>(key: K, value: Option<String>) -> anyhow::Result<()>
     let mut config = read_config()?;
 
     match key.borrow() {
-        Item::ModelProvider => config.model_provider = value.map(|v| Into::<ModelProvider>::into(v)),
+        Item::ModelProvider => config.model_provider = value.and_then(|v| Some(ModelProvider::try_from(v).unwrap())),
         Item::OpenaiApiKey => config.openai_api_key = value,
         Item::AnthropicApiKey => config.anthropic_api_key = value,
         Item::OpenaiModel => config.openai_model = value,
@@ -94,12 +94,14 @@ pub enum ModelProvider {
     Anthropic,
 }
 
-impl From<String> for ModelProvider {
-    fn from(s: String) -> Self {
+impl TryFrom<String> for ModelProvider {
+    type Error = &'static str;
+
+    fn try_from(s: String) -> Result<ModelProvider, Self::Error> {
         match s.to_lowercase().as_str() {
-            "openai" => ModelProvider::OpenAI,
-            "anthropic" => ModelProvider::Anthropic,
-            _ => panic!("Invalid model provider"),
+            "openai" => Ok(ModelProvider::OpenAI),
+            "anthropic" => Ok(ModelProvider::Anthropic),
+            _ => Err("Invalid model provider. Must be either 'openai' or 'anthropic'"),
         }
     }
 }
