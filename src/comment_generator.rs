@@ -1,13 +1,14 @@
 use crate::prompt_translator::PromptTranslator;
 use futures::StreamExt;
+use tokio::pin;
 
-pub struct CommentGenerator {
-    prompt_translator: PromptTranslator,
+pub struct CommentGenerator<T: PromptTranslator> {
+    prompt_translator: T,
     base_message: Option<String>,
 }
 
-impl CommentGenerator {
-    pub fn new(prompt_translator: PromptTranslator, base_message: Option<String>) -> Self {
+impl<T: PromptTranslator> CommentGenerator<T> {
+    pub fn new(prompt_translator: T, base_message: Option<String>) -> Self {
         CommentGenerator {
             prompt_translator,
             base_message,
@@ -64,8 +65,8 @@ you may choose action from following list. if you can't find suitable action, yo
 "#
         );
 
-        let mut response_rx = self.prompt_translator.translate(prompt).await?;
-
+        let response_rx = self.prompt_translator.translate(prompt).await?;
+        pin!(response_rx);
 
         let mut commit_message = String::new();
         while let Some(chunk) = response_rx.next().await {

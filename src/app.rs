@@ -1,6 +1,6 @@
 use crate::{
     comment_generator, committer::Committer, config, confirmor::Confirmor,
-    prompt_translator::PromptTranslator,
+    prompt_translator::{OpenAITranslator},
 };
 
 pub struct App {}
@@ -16,7 +16,7 @@ impl App {
         assume_yes: bool,
     ) -> anyhow::Result<()> {
         let confirmor = Confirmor::new(assume_yes)?;
-        let prompt_translator = PromptTranslator::new(
+        let prompt_translator = OpenAITranslator::new(
             config::get(config::Item::OpenaiModel)?.unwrap_or("gpt-4-turbo-preview".to_string()),
         );
         let comment_generator =

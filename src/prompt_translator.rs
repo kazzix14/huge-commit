@@ -1,29 +1,28 @@
+use futures::Stream;
 use futures::StreamExt;
 use openai::chat::{
     ChatCompletionChoiceDelta, ChatCompletionDelta, ChatCompletionGeneric, ChatCompletionMessage,
 };
 use tokio::sync::mpsc::Receiver;
-use futures::Stream;
 
 use crate::config;
 
-// trait PromptTranslator {
-//     pub fn translate(
-//         &self,
-//         prompt: String,
-//     ) -> anyhow::Result<Receiver<String>>;
-// }
+pub trait PromptTranslator {
+    async fn translate(&self, prompt: String) -> anyhow::Result<impl Stream<Item = String>>;
+}
 
-pub struct PromptTranslator {
+pub struct OpenAITranslator {
     model: String,
 }
 
-impl PromptTranslator {
+impl OpenAITranslator {
     pub fn new(model: String) -> Self {
         Self { model }
     }
+}
 
-    pub async fn translate(&self, prompt: String) -> anyhow::Result<impl Stream<Item = String>> {
+impl PromptTranslator for OpenAITranslator {
+    async fn translate(&self, prompt: String) -> anyhow::Result<impl Stream<Item = String>> {
         let api_key = config::get(config::Item::OpenaiApiKey)?.expect("openai-api-key not set");
 
         openai::set_key(api_key);
@@ -50,7 +49,6 @@ impl PromptTranslator {
                 .collect::<Vec<String>>()
                 .join(" ")
         });
-
 
         Ok(stream)
         //Ok(stream)

@@ -1,5 +1,6 @@
 use crate::comment_generator::CommentGenerator;
 use crate::confirmor::Confirmor;
+use crate::prompt_translator::PromptTranslator;
 
 use std::io::Read;
 use std::path::Path;
@@ -7,14 +8,17 @@ use std::{fmt::Write, io::BufRead};
 
 use git2::{DiffFormat, DiffOptions, Repository};
 
-pub struct Committer {
+pub struct Committer<T: PromptTranslator> {
     repository: git2::Repository,
     confirmor: Confirmor,
-    comment_generator: CommentGenerator,
+    comment_generator: CommentGenerator<T>,
 }
 
-impl Committer {
-    pub fn new(confirmor: Confirmor, comment_generator: CommentGenerator) -> anyhow::Result<Self> {
+impl<T: PromptTranslator> Committer<T> {
+    pub fn new(
+        confirmor: Confirmor,
+        comment_generator: CommentGenerator<T>,
+    ) -> anyhow::Result<Self> {
         while let Err(err) = Repository::open(".") {
             if let Some(parent) = Path::new("..").canonicalize().ok() {
                 std::env::set_current_dir(parent)?;
