@@ -48,8 +48,8 @@ you may choose action from following list. if you can't find suitable action, yo
 - `feat` new feature
 - `fix` bug fix
 - `docs` documentation
-- `refactor` A code change that neither fixes a bug nor adds a feature. also includes white space, formatting, missing semi-colons.
-- `enhance` A code change that improves UX. like performance, messages.
+- `refactor` A code change that neither fixes a bug nor adds a feature. also includes white space, formatting, missing semi-colons. never include new feature or bug fix.
+- `enhance` A code change that improves UX. like performance, messages. never include new feature or bug fix.
 - `test` Adding missing tests or correcting existing tests
 - `build` Changes that affect the build system, includes ci
 - `deps` dependency updates
