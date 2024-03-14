@@ -1,6 +1,6 @@
 use crate::{
     comment_generator, committer::Committer, config, confirmor::Confirmor,
-    prompt_translator::{OpenAITranslator},
+    prompt_translator::OpenAITranslator,
 };
 
 pub struct App {}
