@@ -54,12 +54,55 @@ impl PromptTranslator for OpenAITranslator {
     }
 }
 
-// while let Some(response) = response_rx.recv().await {
-//     response.choices.iter().for_each(|choice| {
-//         if let Some(content) = &choice.delta.content {
-//             commit_message.push_str(content);
-//             print!("{}", content);
-//             std::io::Write::flush(&mut std::io::stdout()).unwrap();
-//         }
-//     });
-// }
+pub struct ClaudeTranslator {
+    model: String,
+}
+
+impl ClaudeTranslator {
+    pub fn new(model: String) -> Self {
+        Self { model }
+    }
+}
+
+impl PromptTranslator for ClaudeTranslator {
+    async fn translate(&self, prompt: String) -> anyhow::Result<impl Stream<Item = String>> {
+        let api_key =
+            config::get(config::Item::AnthropicApiKey)?.expect("anthropic-api-key not set");
+        let client = reqwest::Client::new();
+        let response = client
+            .post("https://api.anthropic.com/v1/complete")
+            .header("Content-Type", "application/json")
+            .header("X-API-Key", api_key)
+            .json(&serde_json::json!({
+                "prompt": prompt,
+                "model": self.model,
+                "stream": true,
+            }))
+            .send()
+            .await?;
+
+        let stream = response
+            .bytes_stream()
+            .map(|chunk| {
+                chunk
+                    .map(|bytes| {
+                        String::from_utf8_lossy(&bytes)
+                            .trim_start_matches("data: ")
+                            .trim()
+                            .to_string()
+                    })
+                    .map_err(|e| futures::io::Error::new(futures::io::ErrorKind::Other, e))
+            })
+            .filter_map(|result| async move { result.ok() })
+            .filter(|data| futures::future::ready(!data.is_empty()))
+            .map(|data| {
+                serde_json::from_str::<serde_json::Value>(&data)
+                    .ok()
+                    .and_then(|value| value.get("completion").cloned())
+                    .and_then(|completion| completion.as_str().map(|s| s.to_string()))
+                    .unwrap_or_default()
+            });
+
+        Ok(stream)
+    }
+}
