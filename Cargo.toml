@@ -14,6 +14,7 @@ readme = "README.md"
 anyhow = "1.0.80"
 chrono = "0.4.34"
 clap = { version = "4.5.1", features = ["derive"] }
+derive_more = "0.99.17"
 directories = "5.0.1"
 futures = "0.3.30"
 git2 = "0.18.2"
