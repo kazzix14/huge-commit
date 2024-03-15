@@ -40,7 +40,6 @@ Write a commit message for the changes I will write at the end of this message.
 - Limit the first line to a maximum of 10 words.
 - return commit message in only 1 line.
 - Explain the reason behind the changes.
-- Focus on the big picture, rather than small details. this does not mean you should not write specific name or details. you should write name of api, options, context, etc. if it has specific name or it is important.
 - Only provide the commit message without starting with "Commit message:".
 - If you can't fit everything in 10 words, prioritize the most important information.
 - Use present tense verbs, e.g., "Add feature" instead of "Added feature".
