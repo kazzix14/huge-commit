@@ -8,14 +8,14 @@ use crate::config;
 
 pub enum PromptTranslator {
     OpenAI(OpenAITranslator),
-    Claude(ClaudeTranslator),
+    Anthropic(AnthropicTranslator),
 }
 
 impl PromptTranslator {
     pub async fn translate(&self, prompt: String) -> anyhow::Result<Pin<Box<dyn Stream<Item = String>>>> {
         match self {
             Self::OpenAI(translator) => Ok(Box::pin(translator.translate(prompt).await?)),
-            Self::Claude(translator) => Ok(Box::pin(translator.translate(prompt).await?)),
+            Self::Anthropic(translator) => Ok(Box::pin(translator.translate(prompt).await?)),
         }
     }
 }
@@ -63,17 +63,17 @@ impl OpenAITranslator {
     }
 }
 
-pub struct ClaudeTranslator {
+pub struct AnthropicTranslator {
     model: String,
 }
 
-impl ClaudeTranslator {
+impl AnthropicTranslator {
     pub fn new(model: String) -> Self {
         Self { model }
     }
 }
 
-impl ClaudeTranslator {
+impl AnthropicTranslator {
     async fn translate(&self, prompt: String) -> anyhow::Result<impl Stream<Item = String>> {
         let api_key = config::get(config::Item::AnthropicApiKey)?.expect("anthropic-api-key not set");
         let client = reqwest::Client::new();
