@@ -1,5 +1,5 @@
 use clap::Subcommand;
-use std::{borrow::Borrow, fs::File, io::Write};
+use std::{any::Any, borrow::Borrow, fs::File, io::Write};
 
 #[derive(Debug, Subcommand)]
 pub enum Command {
@@ -28,11 +28,16 @@ pub enum Item {
     AnthropicModel,
 }
 
+pub struct Config {
+    key: Item,
+    value: Option<String>,
+}
+
 pub fn get<K: Borrow<Item>>(key: K) -> anyhow::Result<Option<String>> {
     let config = read_config()?;
 
     let value = match key.borrow() {
-        Item::ModelProvider => config.model_provider.map(|v| v.to_string()),
+        Item::ModelProvider => panic!("use get_model_provider"),
         Item::OpenaiApiKey => config.openai_api_key,
         Item::AnthropicApiKey => config.anthropic_api_key,
         Item::OpenaiModel => config.openai_model,
@@ -41,6 +46,12 @@ pub fn get<K: Borrow<Item>>(key: K) -> anyhow::Result<Option<String>> {
     };
 
     Ok(value)
+}
+
+pub fn get_model_provider() -> anyhow::Result<Option<ModelProvider>> {
+    let config = read_config()?;
+
+    Ok(config.model_provider)
 }
 
 pub fn set<K: Borrow<Item>>(key: K, value: Option<String>) -> anyhow::Result<()> {
@@ -70,17 +81,17 @@ fn config_path() -> anyhow::Result<std::path::PathBuf> {
     Ok(config_path)
 }
 
-fn read_config() -> anyhow::Result<Config> {
+fn read_config() -> anyhow::Result<ConfigStore> {
     if !config_path()?.exists() {
         std::fs::File::create(config_path()?)?;
     }
 
     let config = std::fs::read_to_string(&mut config_path()?)?;
 
-    Ok(toml::from_str::<Config>(&config).expect("Failed to parse config file"))
+    Ok(toml::from_str::<ConfigStore>(&config).expect("Failed to parse config file"))
 }
 
-fn write_config(config: &Config) -> anyhow::Result<()> {
+fn write_config(config: &ConfigStore) -> anyhow::Result<()> {
     let mut file = File::create(config_path()?)?;
 
     file.write_all(toml::to_string(config)?.as_bytes())?;
@@ -107,7 +118,7 @@ impl TryFrom<String> for ModelProvider {
 }
 
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
-pub struct Config {
+pub struct ConfigStore {
     pub model_provider: Option<ModelProvider>,
     pub openai_api_key: Option<String>,
     pub openai_model: Option<String>,

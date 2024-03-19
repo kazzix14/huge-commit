@@ -17,6 +17,8 @@ use std::error::Error;
 enum UserError {
     #[error("No changes to commit.")]
     NoChangesToCommit,
+    #[error("Model provider not set. Use `huge-commit config set model-provider <provider>` to set it.")]
+    ModelProviderNotSet,
 }
 
 #[tokio::main]
