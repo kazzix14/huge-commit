@@ -8,16 +8,16 @@ use std::{fmt::Write, io::BufRead};
 
 use git2::{DiffFormat, DiffOptions, Repository};
 
-pub struct Committer<T: PromptTranslator> {
+pub struct Committer {
     repository: git2::Repository,
     confirmor: Confirmor,
-    comment_generator: CommentGenerator<T>,
+    comment_generator: CommentGenerator,
 }
 
-impl<T: PromptTranslator> Committer<T> {
+impl Committer {
     pub fn new(
         confirmor: Confirmor,
-        comment_generator: CommentGenerator<T>,
+        comment_generator: CommentGenerator,
     ) -> anyhow::Result<Self> {
         while let Err(err) = Repository::open(".") {
             if let Some(parent) = Path::new("..").canonicalize().ok() {

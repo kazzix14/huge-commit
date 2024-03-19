@@ -1,11 +1,23 @@
+use std::pin::Pin;
+
 use futures::Stream;
 use futures::StreamExt;
 use openai::chat::{ChatCompletionChoiceDelta, ChatCompletionDelta, ChatCompletionGeneric, ChatCompletionMessage};
 
 use crate::config;
 
-pub trait PromptTranslator {
-    async fn translate(&self, prompt: String) -> anyhow::Result<impl Stream<Item = String>>;
+pub enum PromptTranslator {
+    OpenAI(OpenAITranslator),
+    Claude(ClaudeTranslator),
+}
+
+impl PromptTranslator {
+    pub async fn translate(&self, prompt: String) -> anyhow::Result<Pin<Box<dyn Stream<Item = String>>>> {
+        match self {
+            Self::OpenAI(translator) => Ok(Box::pin(translator.translate(prompt).await?)),
+            Self::Claude(translator) => Ok(Box::pin(translator.translate(prompt).await?)),
+        }
+    }
 }
 
 pub struct OpenAITranslator {
@@ -18,7 +30,7 @@ impl OpenAITranslator {
     }
 }
 
-impl PromptTranslator for OpenAITranslator {
+impl OpenAITranslator {
     async fn translate(&self, prompt: String) -> anyhow::Result<impl Stream<Item = String>> {
         let api_key = config::get(config::Item::OpenaiApiKey)?.expect("openai-api-key not set");
 
@@ -48,7 +60,6 @@ impl PromptTranslator for OpenAITranslator {
         });
 
         Ok(stream)
-        //Ok(stream)
     }
 }
 
@@ -62,7 +73,7 @@ impl ClaudeTranslator {
     }
 }
 
-impl PromptTranslator for ClaudeTranslator {
+impl ClaudeTranslator {
     async fn translate(&self, prompt: String) -> anyhow::Result<impl Stream<Item = String>> {
         let api_key = config::get(config::Item::AnthropicApiKey)?.expect("anthropic-api-key not set");
         let client = reqwest::Client::new();

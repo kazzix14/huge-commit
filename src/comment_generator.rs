@@ -2,13 +2,13 @@ use crate::prompt_translator::PromptTranslator;
 use futures::StreamExt;
 use tokio::pin;
 
-pub struct CommentGenerator<T: PromptTranslator> {
-    prompt_translator: T,
+pub struct CommentGenerator {
+    prompt_translator: PromptTranslator,
     base_message: Option<String>,
 }
 
-impl<T: PromptTranslator> CommentGenerator<T> {
-    pub fn new(prompt_translator: T, base_message: Option<String>) -> Self {
+impl CommentGenerator {
+    pub fn new(prompt_translator: PromptTranslator, base_message: Option<String>) -> Self {
         CommentGenerator {
             prompt_translator,
             base_message,

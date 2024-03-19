@@ -3,7 +3,7 @@ use crate::{
     committer::Committer,
     config,
     confirmor::Confirmor,
-    prompt_translator::{ClaudeTranslator, OpenAITranslator},
+    prompt_translator::{ClaudeTranslator, OpenAITranslator, PromptTranslator},
 };
 
 pub struct App {}
@@ -30,7 +30,7 @@ impl App {
                         config::get(config::Item::OpenaiModel)?.unwrap_or("gpt-4-turbo-preview".to_string()),
                     );
 
-                    let comment_generator = comment_generator::CommentGenerator::new(prompt_translator, base_message);
+                    let comment_generator = comment_generator::CommentGenerator::new(PromptTranslator::OpenAI(prompt_translator), base_message);
                     let committer = Committer::new(confirmor, comment_generator)?;
 
                     committer.commit().await?;
@@ -44,7 +44,7 @@ impl App {
                         config::get(config::Item::AnthropicModel)?.unwrap_or("claude-3-opus-20240229".to_string()),
                     );
 
-                    let comment_generator = comment_generator::CommentGenerator::new(prompt_translator, base_message);
+                    let comment_generator = comment_generator::CommentGenerator::new(PromptTranslator::Claude(prompt_translator), base_message);
                     let committer = Committer::new(confirmor, comment_generator)?;
 
                     committer.commit().await?;

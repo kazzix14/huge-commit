@@ -1,2 +1,4 @@
 .vscode
 /target
+/flattener
+/all_in_one.json
