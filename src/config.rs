@@ -18,7 +18,7 @@ pub enum Command {
     },
 }
 
-#[derive(Debug, Clone, Copy, clap::ValueEnum)]
+#[derive(Debug, Clone, Copy, clap::ValueEnum, PartialEq, Eq)]
 pub enum Item {
     ModelProvider,
     OpenaiApiKey,
